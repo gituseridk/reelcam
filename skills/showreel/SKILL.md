@@ -38,9 +38,12 @@ steps:
   - wait: 1500
 ```
 
-Steps: `visit`, `click`, `hover`, `type`, `press`, `scroll`, `wait`, `waitFor`,
-`focus` (camera frames an element), `zoom` (focus with a set level), `wide` (whole page),
-`caption`. Selectors are Playwright selectors (CSS, `:has-text()`, `>> nth=1`).
+Steps: `visit`, `click` (a selector, or `{ at: [x, y] }` page fractions), `hover`, `type`,
+`press`, `scroll`, `drag` (`{ from, to, on }`), `wait`, `waitFor`, `focus` (camera frames an
+element, or `{ area: [left, top, right, bottom] }` for canvas apps), `zoom` (focus with a set
+level), `wide` (whole page), `caption`. `setup:` holds steps played before filming (sign in,
+dismiss a banner, give a canvas app keyboard focus). Selectors are Playwright selectors (CSS,
+`:has-text()`, `>> nth=1`).
 
 Camera rules (the check enforces the first three):
 - A `focus` frames a whole ELEMENT, never a point. Pick the smallest element that contains

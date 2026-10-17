@@ -1,27 +1,45 @@
 # Showreel
 
-**Cinematic demo videos of your web app, from 12 lines of YAML.** A camera that frames what
-matters, a pointer that moves like a person, captions, and a check that fails the video when the
-camera crops its subject. Runs headless, in CI, or by your coding agent.
+**Cinematic demo videos of your web app, from a short YAML script.** A camera that frames what
+matters and moves ahead of the action, a pointer that moves like a person, captions that never
+cover the subject, and a check that fails the video when the camera crops it. Runs headless, in
+CI, or by your coding agent.
 
 [![The hero video, made by Showreel](docs/hero.png)](docs/hero.mp4)
 
-<sub>The video above (click for the MP4) was recorded by Showreel from [`examples/hero.yml`](examples/hero.yml):</sub>
+<sub>The video above (click for the MP4) was recorded by Showreel from these 17 lines,
+[`examples/hero.yml`](examples/hero.yml). The demo app, Orbit, is in [`examples/orbit`](examples/orbit).</sub>
 
 ```yaml
-title: Add a task, finish it
-serve: app
+serve: orbit
 viewport: { width: 1280, height: 720 }
 steps:
-  - wait: 1400
-  - focus: { on: "#composer", why: "typing stays inside the composer" }
-  - type: { into: "#new-task", text: "Record the launch video" }
+  - wait: 200
+  - click: "#search"
+  - focus: { on: "#palette", why: "the typing happens inside the palette" }
+  - type: { text: "ship 2.0", delay: 75 }
+  - wait: 450
   - press: Enter
-  - focus: { on: "#today", why: "the payoff: the list and the progress ring" }
-  - click: "li:has-text('Record the launch video') .check"
-  - caption: Made with Showreel from 12 lines of YAML
-  - wait: 1800
+  - focus: { on: "#release", why: "the checks tick, the ring fills, it goes live" }
+  - wait: 2600
+  - wide: "the changelog is below the fold"
+  - scroll: { to: "#changelog", ms: 1200 }
+  - wait: 250
+  - focus: { on: "#changelog", why: "the payoff: 2.0 lands in the changelog" }
+  - caption: Recorded from 17 lines of YAML
+  - wait: 1900
 ```
+
+The same story as a 9:16 phone video, from [`examples/hero-vertical.yml`](examples/hero-vertical.yml):
+[docs/hero-vertical.mp4](docs/hero-vertical.mp4).
+
+### Gallery
+
+| | |
+|---|---|
+| [![Excalidraw, filmed by Showreel](docs/gallery/excalidraw.png)](docs/gallery/excalidraw.mp4) | **Excalidraw** (MIT), built and run locally. A two-step flow sketched with the keyboard tools, filmed by [a 22-line script](examples/gallery/excalidraw/excalidraw.yml) with `drag`, a `setup` step and an `area` shot. |
+
+Every video has a per-moment content audit in [docs/AUDIT.md](docs/AUDIT.md).
 
 ## Quickstart
 
@@ -47,7 +65,7 @@ locally, or `serve` at a built folder, then `showreel render showreel.yml`.
 
 - **Every move has a reason.** A shot frames a whole UI element, read from the DOM while it
   records. The camera cuts between shots on a critically damped spring, and it never chases the cursor.
-- **It checks itself.** The render fails (exit 1) when a settled frame crops its subject, a shot
+- **It checks itself.** The render fails (exit 1) when a frame crops its subject (from 0.15 s after its cut), a shot
   flickers past in under 1.2 s, a click happens off camera, a caption covers the subject, or
   forbidden text (say `lorem` or `TODO`) appears on screen.
 - **It is repeatable.** A script is code: review it in a PR, re-record it after every UI change,
@@ -74,14 +92,17 @@ locally, or `serve` at a built folder, then `showreel render showreel.yml`.
 | `output` | `out/<name>.mp4` | Where to write the MP4, relative to the script. |
 | `gif` | `false` | Also write a GIF. |
 | `seed` | `1` | Seed for the pointer's human jitter. |
+| `setup` | `[]` | Steps played before filming starts: sign in, dismiss a banner, give a canvas app keyboard focus. No camera steps. |
 | `steps` | | The list below. |
 
 | Step | Example | Does |
 |---|---|---|
 | `focus` | `focus: { on: "#form", why: "..." }` or `focus: "#form"` | Camera frames this element, whole, until the next camera step. |
+| `focus` area | `focus: { area: [0.2, 0.3, 0.8, 0.7] }` | Camera frames a region of the page ([left, top, right, bottom] fractions), for canvas apps. |
 | `zoom` | `zoom: { on: ".chart", level: 1.5 }` | Like `focus`, at most this zoom. |
 | `wide` | `wide` or `wide: "why"` | Camera back to the whole page. |
-| `click` | `click: "button:has-text('Save')"` | Moves the pointer there and clicks. |
+| `click` | `click: "button:has-text('Save')"` or `click: { at: [0.5, 0.6] }` | Moves the pointer there and clicks, then eases off so the result shows. |
+| `drag` | `drag: { from: [0.2, 0.4], to: "#bin", on: "canvas", ms: 600 }` | Press, move, release: draw, drag and drop. Points are selectors or fractions of `on` (default the page). |
 | `hover` | `hover: ".menu"` | Moves the pointer there. |
 | `type` | `type: { into: "#name", text: "Ada", delay: 45 }` | Clicks the field (if `into`) and types like a person. |
 | `press` | `press: Enter` | Presses a key or chord (`Control+K`). |
@@ -97,13 +118,19 @@ problem with its path, such as `steps[3].type.text: expected string`.
 
 ## Camera rules
 
-1. A shot frames a **subject**, a whole element, with air on every side (it fills at most 88%).
-   If the subject grows during the shot, the frame grows with it and never shrinks back.
-2. Zoom in only when the subject is small and every beat that follows stays inside it. A zoom
+1. A shot frames a **subject**, a whole element or a page area, with air on every side (it fills
+   at most 88%). If the subject grows during the shot, the frame grows with it and never shrinks back.
+2. Every move **starts 0.35 s ahead of the cut**, and the zoom is capped on the way so the next
+   subject is whole from the first frame of its shot. Pulling out is quicker than pushing in.
+3. Zoom in only when the subject is small and every beat that follows stays inside it. A zoom
    that gains less than 12% is skipped.
-3. Lists, feeds, scrolling and search are shown wide: both the source and the result must be seen.
-4. Every shot is held at least 1.2 s.
-5. One idea per video: 6 to 15 s. Start on the view and end right after the payoff.
+4. Lists, feeds, scrolling and search are shown wide: both the source and the result must be seen.
+   A wide shot fills the frame when that crops only the stage margin.
+5. While a shot holds, the camera **breathes**: a 3% push-in over 5 s.
+6. Captions get room: for the whole shot the camera keeps the caption band clear of the subject
+   (a wide shot pulls back, and a view may pass onto the stage below the page).
+7. Every shot is held at least 1.2 s.
+8. One idea per video: 6 to 15 s. Start on the view and end right after the payoff.
 
 ## Presets
 
@@ -172,7 +199,9 @@ if (result.problems.length > 0) console.error(result.problems);
 npm ci
 npx playwright install chromium
 npm run check        # eslint (strict, type-checked) + tsc + vitest, including real renders
-./scripts/hero.sh    # re-render the README hero
+./scripts/hero.sh    # re-render the README videos (16:9 and 9:16)
+./scripts/gallery.sh # build Excalidraw locally and film the gallery video
+node scripts/rename.mjs <new-name> "<Display Name>"   # rename the project everywhere in one step
 ./scripts/fresh-install.sh   # run the Quickstart above in a clean container
 ```
 
