@@ -18,7 +18,7 @@ export class Director {
   constructor(private readonly page: Page) {}
 
   /** The subject's box in page px, clipped to the window; null when it is not on the page. */
-  async rect(subject: Subject): Promise<Rect | null> {
+  async rect(subject: Subject, timeout = 400): Promise<Rect | null> {
     const vp = this.page.viewportSize();
     if (vp === null) throw new UserError('the page has no viewport size');
     if (subject === 'window') return { x: 0, y: 0, width: vp.width, height: vp.height };
@@ -26,7 +26,7 @@ export class Director {
       const [x0, y0, x1, y1] = subject.area;
       return { x: x0 * vp.width, y: y0 * vp.height, width: (x1 - x0) * vp.width, height: (y1 - y0) * vp.height };
     }
-    const box = await subject.boundingBox({ timeout: 400 }).catch((error: unknown) => {
+    const box = await subject.boundingBox({ timeout }).catch((error: unknown) => {
       log.debug(`subject not measurable now: ${describe(error)}`);
       return null;
     });
@@ -42,7 +42,7 @@ export class Director {
   /** From now on the camera frames `subject`, whole, until the next shot. */
   async shot(name: string, subject: Subject, why: string, zoom?: number): Promise<void> {
     await this.stop();
-    const rect = await this.rect(subject);
+    const rect = await this.rect(subject, 5000); // a busy page may take a moment to answer
     if (rect === null) throw new UserError(`shot "${name}": the subject is not visible on the page`, 'Scroll it into view first, or wait for it with "waitFor".');
     this.dropInstantShot();
     const index = this.shots.length;
