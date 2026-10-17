@@ -7,7 +7,7 @@ import { lastAtOrBefore } from './framing.js';
 import { cameraView, type Camera, type Layout, type View } from './geometry.js';
 import { drawOverlay, type Overlay } from './overlays.js';
 import { drawArrow, drawRipple } from './pointer.js';
-import { drawStage } from './stage.js';
+import { PAD, drawStage } from './stage.js';
 
 export class Compositor {
   readonly out: Canvas;
@@ -53,11 +53,11 @@ export class Compositor {
   /** Draws the frame at time t and returns the camera's view of the canvas. */
   async draw(t: number, cam: Camera, clickAge: number | null): Promise<View> {
     const { preset, page } = this.lay;
-    const view = cameraView(cam.cx, cam.cy, cam.z, preset.width, preset.height);
+    const view = cameraView(cam.cx, cam.cy, cam.z, preset.width, preset.height, cam.slack);
     const ctx = this.out.getContext('2d');
     ctx.imageSmoothingQuality = 'high';
     ctx.setTransform(cam.z, 0, 0, cam.z, -view.x * cam.z, -view.y * cam.z);
-    ctx.drawImage(this.stage, 0, 0);
+    ctx.drawImage(this.stage, -preset.width * PAD, -preset.height * PAD);
     ctx.save();
     ctx.beginPath();
     ctx.roundRect(page.x, page.y, page.width, page.height, preset.radius);

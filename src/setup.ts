@@ -45,7 +45,7 @@ export async function writeDemo(dir: string, force: boolean): Promise<string> {
   const script = path.join(dir, 'demo.yml');
   if ((await exists(script)) && !force) throw new UserError(`${script} already exists`, 'Pass --force to overwrite it.');
   await mkdir(dir, { recursive: true });
-  await cp(path.join(PACKAGE_ROOT, 'examples', 'app'), path.join(dir, 'app'), { recursive: true });
+  await cp(path.join(PACKAGE_ROOT, 'examples', 'orbit'), path.join(dir, 'orbit'), { recursive: true });
   const hero = await readFile(path.join(PACKAGE_ROOT, 'examples', 'hero.yml'), 'utf8');
   await writeFile(script, hero);
   return script;

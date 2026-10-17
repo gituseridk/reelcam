@@ -1,4 +1,4 @@
-/** End to end: real Chromium, real ffmpeg, the demo app from examples/app. */
+/** End to end: real Chromium, real ffmpeg, the demo app from examples/pebble. */
 import { execFileSync } from 'node:child_process';
 import { mkdtemp, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
@@ -9,7 +9,7 @@ import { main } from '../src/cli.js';
 import { render } from '../src/index.js';
 import { setLevel } from '../src/log.js';
 
-const APP = path.resolve('examples/app');
+const APP = path.resolve('examples/pebble');
 let dir: string;
 
 beforeAll(async () => {

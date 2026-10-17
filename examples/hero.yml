@@ -1,13 +1,18 @@
-# The README's hero video: one idea, add a task and finish it.
-title: Add a task, finish it
-serve: app
+# The README hero: ship a release from the command bar, in one take.
+serve: orbit
 viewport: { width: 1280, height: 720 }
 steps:
-  - wait: 1400
-  - focus: { on: "#composer", why: "typing stays inside the composer" }
-  - type: { into: "#new-task", text: "Record the launch video" }
+  - wait: 200
+  - click: "#search"
+  - focus: { on: "#palette", why: "the typing happens inside the palette" }
+  - type: { text: "ship 2.0", delay: 75 }
+  - wait: 450
   - press: Enter
-  - focus: { on: "#today", why: "the payoff: the list and the progress ring" }
-  - click: "li:has-text('Record the launch video') .check"
-  - caption: Made with Showreel from 12 lines of YAML
-  - wait: 1800
+  - focus: { on: "#release", why: "the checks tick, the ring fills, it goes live" }
+  - wait: 2600
+  - wide: "the changelog is below the fold"
+  - scroll: { to: "#changelog", ms: 1200 }
+  - wait: 250
+  - focus: { on: "#changelog", why: "the payoff: 2.0 lands in the changelog" }
+  - caption: Recorded from 17 lines of YAML
+  - wait: 1900

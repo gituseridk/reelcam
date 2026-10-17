@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Orbit · releases</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <nav class="top">
+    <div class="brand"><span class="logo"></span>Orbit</div>
+    <div class="tabs"><a class="on">Releases</a><a>Roadmap</a><a>Team</a></div>
+    <button id="search" class="search"><span>Search or run a command</span><kbd>Ctrl K</kbd></button>
+    <span class="avatar">JR</span>
+  </nav>
+
+  <main>
+    <section id="release" class="card release">
+      <div class="head">
+        <div>
+          <p class="eyebrow" id="eyebrow">Release candidate</p>
+          <h1 id="headline">Orbit 2.0</h1>
+          <p class="sub" id="sub">Ships when every check is green.</p>
+        </div>
+        <div class="ring" aria-label="progress">
+          <svg viewBox="0 0 120 120"><circle class="track" cx="60" cy="60" r="52"/><circle class="bar" id="bar" cx="60" cy="60" r="52"/></svg>
+          <div class="ring-label"><b id="pct">60%</b><span id="count">3 of 5</span></div>
+        </div>
+      </div>
+      <ul id="checks" class="checks"></ul>
+    </section>
+
+    <div class="row">
+    <section id="changelog" class="card changelog">
+      <h2>Changelog</h2>
+      <ol id="entries">
+        <li><div class="what"><span class="ver">1.9</span><div><b>Faster sync</b><p>Boards load in half the time on large teams.</p></div></div><time>May 28</time></li>
+        <li><div class="what"><span class="ver">1.8</span><div><b>Keyboard everywhere</b><p>Every action now has a shortcut.</p></div></div><time>May 02</time></li>
+      </ol>
+    </section>
+    <section id="rollout" class="card rollout">
+      <h2>Rollout</h2>
+      <p class="big"><b id="teams">0</b> teams on 2.0</p>
+      <div class="meter"><span id="meter"></span></div>
+      <p class="note" id="note">Starts when 2.0 ships.</p>
+    </section>
+    </div>
+  </main>
+
+  <div id="palette-layer" class="layer" hidden>
+    <div id="palette" class="palette" role="dialog" aria-label="Command palette">
+      <div class="prompt"><span class="caret">›</span><input id="command" placeholder="Type a command" autocomplete="off"></div>
+      <ul id="results" class="results"></ul>
+    </div>
+  </div>
+  <canvas id="confetti"></canvas>
+  <script src="confetti.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { getPreset } from '../src/presets/index.js';
 import { Framing, lastAtOrBefore, union } from '../src/render/framing.js';
-import { Layout } from '../src/render/geometry.js';
+import { Layout, wideZoom } from '../src/render/geometry.js';
 import { rect, shot, take } from './helpers.js';
 
-const lay = new Layout(getPreset('studio'), { width: 1440, height: 810 });
+const still = { ...getPreset('studio'), breathe: 0 };
+const lay = new Layout(still, { width: 1440, height: 810 });
+const W = wideZoom(lay);
 
 describe('helpers', () => {
   it('union covers both boxes', () => {
@@ -22,7 +24,8 @@ describe('helpers', () => {
 describe('Framing.target', () => {
   it('rests on the whole canvas for window shots', () => {
     const f = new Framing(take([shot(0, rect(0, 0, 1440, 810), { window: true })]), lay);
-    expect(f.target(1)).toEqual([960, 540, 1]);
+    expect(f.target(1)).toEqual([960, 540, W]);
+    expect(W).toBeCloseTo(1920 / lay.page.width);
   });
 
   it('zooms on a small subject with air on every side, capped at maxZoom', () => {
@@ -40,7 +43,7 @@ describe('Framing.target', () => {
 
   it('skips a zoom that gains less than 12%', () => {
     const f = new Framing(take([shot(0, rect(0, 0, 1400, 780))]), lay);
-    expect(f.target(1)[2]).toBe(1);
+    expect(f.target(1)[2]).toBe(W);
   });
 
   it('honours an explicit zoom level below the fit', () => {

@@ -6,21 +6,12 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; height: 100%; }
-body { display: grid; grid-template-columns: 260px 1fr; background: var(--bg); }
+body { background: var(--bg); }
 
-.side { background: #1c1d2b; color: #c9cbe0; padding: 28px 18px; display: flex; flex-direction: column; gap: 28px; }
-.brand { display: flex; align-items: center; gap: 10px; color: #fff; font-weight: 700; font-size: 19px; letter-spacing: -0.01em; padding: 0 10px; }
-.logo { width: 22px; height: 22px; border-radius: 7px; background: linear-gradient(135deg, #8b8bff, #5b5bf0); }
-nav { display: flex; flex-direction: column; gap: 4px; }
-nav a { display: flex; justify-content: space-between; padding: 10px 12px; border-radius: 10px; color: inherit; text-decoration: none; font-size: 15px; }
-nav a span { color: #7d80a0; font-size: 13px; }
-nav a.on { background: #2b2d42; color: #fff; }
-nav a.on span { color: #b6b8ff; }
-.me { margin-top: auto; display: flex; align-items: center; gap: 10px; font-size: 14px; padding: 0 10px; }
-.avatar { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #f0b45c; color: #1c1d2b; font-weight: 700; }
 
-main { padding: 44px 64px; }
-#today { max-width: 680px; }
+main { padding: 56px 24px; }
+#today { max-width: 680px; margin: 0 auto; }
+.brand-mark { display: inline-block; width: 12px; height: 12px; border-radius: 4px; margin-right: 8px; vertical-align: -1px; background: linear-gradient(135deg, #8b8bff, #5b5bf0); }
 header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
 .day { margin: 0 0 4px; color: var(--muted); font-size: 15px; }
 h1 { margin: 0; font-size: 38px; letter-spacing: -0.02em; }
@@ -53,8 +44,6 @@ li.done .title { color: var(--muted); text-decoration: line-through; text-decora
 .t-launch { background: var(--accent-soft); color: #4646c8; }
 
 @media (max-width: 700px) {
-  body { grid-template-columns: 1fr; }
-  .side { display: none; }
   main { padding: 36px 20px; }
   h1 { font-size: 32px; }
 }

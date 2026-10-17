@@ -4,7 +4,7 @@ import type { Preset } from './types.js';
 
 export type { Preset } from './types.js';
 
-const camera = { halfLife: 0.2, fill: 0.88, minGain: 1.12, maxZoom: 2.2 } as const;
+const camera = { halfLife: 0.2, fill: 0.88, minGain: 1.12, maxZoom: 2.2, breathe: 0.03, breatheSeconds: 5, lead: 0.35 } as const;
 const darkPointer = { fill: '#ffffff', stroke: '#14161c', size: 30 } as const;
 
 const studio: Preset = {

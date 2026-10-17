@@ -3,7 +3,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
-  { ignores: ['dist/**', 'node_modules/**', 'out/**', '.showreel/**', 'examples/app/**', 'eslint.config.js'] },
+  { ignores: ['dist/**', 'node_modules/**', 'out/**', '.showreel/**', 'eslint.config.js'] },
   js.configs.recommended,
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
@@ -22,6 +22,17 @@ export default tseslint.config(
       '@typescript-eslint/switch-exhaustiveness-check': 'error',
       '@typescript-eslint/no-floating-promises': 'error',
     },
+  },
+  {
+    // The demo apps: plain browser scripts, linted without type information.
+    files: ['examples/**/*.js'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: {
+      ...tseslint.configs.disableTypeChecked.languageOptions,
+      sourceType: 'script',
+      globals: { window: 'readonly', document: 'readonly', performance: 'readonly', requestAnimationFrame: 'readonly', setTimeout: 'readonly', innerWidth: 'readonly', innerHeight: 'readonly' },
+    },
+    rules: { ...tseslint.configs.disableTypeChecked.rules, '@typescript-eslint/explicit-function-return-type': 'off' },
   },
   {
     // Plain Node scripts: linted without type information.

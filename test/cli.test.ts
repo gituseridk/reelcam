@@ -69,7 +69,7 @@ describe('cli demo and setup', () => {
   it('init --demo copies the app and a script that passes check', async () => {
     const target = path.join(await mkdtemp(path.join(os.tmpdir(), 'showreel-demo-')), 'demo');
     expect(await run('init', '--demo', target)).toBe(0);
-    expect(await readFile(path.join(target, 'app', 'index.html'), 'utf8')).toContain('Pebble');
+    expect(await readFile(path.join(target, 'orbit', 'index.html'), 'utf8')).toContain('Orbit');
     expect(await run('check', path.join(target, 'demo.yml'))).toBe(0);
     expect(await run('init', '--demo', target)).toBe(3);
   });

@@ -22,6 +22,11 @@ export interface Preset {
   /** A zoom that gains less than this is not worth a move. */
   minGain: number;
   maxZoom: number;
+  /** A slow push-in while a shot holds: the zoom grows by this share over `breatheSeconds`. */
+  breathe: number;
+  breatheSeconds: number;
+  /** Seconds the camera starts each move ahead of the cut, so it lands as the action starts. */
+  lead: number;
   caption: { background: string; color: string; fontSize: number };
   /** x264 quality, lower is better (18-28). */
   crf: number;

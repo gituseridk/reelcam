@@ -7,6 +7,9 @@ import { ease, glideMs, glidePoint } from './motion.js';
 
 export type Sample = [number, number, number];
 
+/** After a click the pointer drifts this far (px, down and right) so it does not hide what changed. */
+export const DRIFT: readonly [number, number] = [34, 30];
+
 export class Actor {
   x: number;
   y: number;
@@ -61,7 +64,8 @@ export class Actor {
     await this.page.mouse.down();
     await sleep(60);
     await this.page.mouse.up();
-    await this.wait(350);
+    await this.wait(120);
+    await this.glide([this.x + DRIFT[0], this.y + DRIFT[1]], 420); // the hand eases off, uncovering the result
   }
 
   /** Types like a person: one key at a time, `delay` ms apart with a little seeded jitter. */

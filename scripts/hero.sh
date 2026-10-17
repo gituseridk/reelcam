@@ -1,10 +1,14 @@
 #!/usr/bin/env bash
-# Renders the README hero (docs/hero.mp4) with Showreel itself, plus its poster frame.
+# Renders the README videos with the tool itself: docs/hero.mp4 (16:9) and docs/hero-vertical.mp4
+# (9:16), their poster frames, and each take's QA contact sheet in out/ (kept out of git).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 npm run build --silent
-node dist/cli.js render examples/hero.yml --out docs/hero.mp4
-duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 docs/hero.mp4)"
-ffmpeg -nostdin -loglevel error -y -ss "$(awk -v d="$duration" "BEGIN { print d * 0.82 }")" -i docs/hero.mp4 -frames:v 1 docs/hero.png
-mkdir -p out && mv docs/hero.sheet.png out/hero.sheet.png   # the QA sheet of this exact take, kept out of git
-echo "docs/hero.mp4 docs/hero.png out/hero.sheet.png"
+mkdir -p out
+for name in hero hero-vertical; do
+  node dist/cli.js render "examples/$name.yml" --out "docs/$name.mp4"
+  mv "docs/$name.sheet.png" "out/$name.sheet.png"
+  duration="$(ffprobe -v error -show_entries format=duration -of csv=p=0 "docs/$name.mp4")"
+  ffmpeg -nostdin -loglevel error -y -ss "$(awk -v d="$duration" 'BEGIN { print d * 0.9 }')" -i "docs/$name.mp4" -frames:v 1 "docs/$name.png"
+done
+echo "docs/hero.mp4 docs/hero-vertical.mp4 (sheets in out/)"

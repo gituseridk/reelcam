@@ -32,7 +32,6 @@ function row(task, fresh) {
 function update() {
   const done = tasks.filter((t) => t.done).length;
   document.getElementById('progress').textContent = `${done}/${tasks.length}`;
-  document.getElementById('count-side').textContent = String(tasks.length - done);
   document.getElementById('bar').style.strokeDashoffset = String(C * (1 - done / Math.max(1, tasks.length)));
 }
 

@@ -1,0 +1,20 @@
+# The hero story as a 9:16 phone video.
+serve: orbit
+viewport: { width: 390, height: 844 }
+scale: 3
+preset: vertical
+steps:
+  - wait: 200
+  - click: "#search"
+  - focus: { on: "#palette", why: "the typing happens inside the palette" }
+  - type: { text: "ship 2.0", delay: 75 }
+  - wait: 450
+  - press: Enter
+  - focus: { on: "#release", why: "the checks tick, the ring fills, it goes live" }
+  - wait: 2600
+  - wide: "the rollout is below the fold"
+  - scroll: { to: "#rollout", ms: 1300 }
+  - wait: 250
+  - focus: { on: "#rollout", why: "the payoff: every team gets 2.0" }
+  - caption: Recorded from 19 lines of YAML
+  - wait: 1900

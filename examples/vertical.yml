@@ -1,6 +1,6 @@
 # A 9:16 phone video: a 390x844 viewport on the vertical preset.
 title: Done in one tap
-serve: app
+serve: pebble
 viewport: { width: 390, height: 844 }
 scale: 3
 preset: vertical

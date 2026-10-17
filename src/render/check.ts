@@ -5,7 +5,7 @@ import type { Rect } from '../take.js';
 import { lastAtOrBefore, type Framing } from './framing.js';
 import type { Layout, View } from './geometry.js';
 
-export const SETTLE = 0.9; // seconds after a cut before the framing must be exact
+export const SETTLE = 0.15; // seconds after a cut before the subject must be whole (the camera moves ahead of the cut)
 export const GRACE = 0.6; // seconds after the subject itself changed size
 export const MIN_HOLD = 1.2; // a shot shorter than this is a flicker, not a shot
 
@@ -43,11 +43,17 @@ function holds(framing: Framing, end: number): string[] {
   });
 }
 
+/** True while the camera is already leaving shot i for the next one (it moves `lead` s ahead). */
+function leaving(framing: Framing, lay: Layout, i: number, t: number): boolean {
+  const next = framing.starts[i + 1];
+  return next !== undefined && t > next - lay.preset.lead;
+}
+
 function crops(framing: Framing, lay: Layout, views: readonly ViewAt[], t0: number): string[] {
   for (const v of views) {
     const i = framing.index(v.t);
     const shot = framing.shots[i];
-    if (shot === undefined || v.t < shot.t + SETTLE) continue;
+    if (shot === undefined || shot.window || v.t < shot.t + SETTLE || leaving(framing, lay, i, v.t)) continue;
     const at = subjectAt(framing, i, v.t);
     if (at === null || v.t < at.changed + GRACE) continue;
     const [x0, y0] = lay.toCanvas(at.rect.x, at.rect.y);
@@ -64,7 +70,7 @@ function covered(framing: Framing, lay: Layout, views: readonly ViewAt[], t0: nu
     const i = framing.index(v.t);
     const shot = framing.shots[i];
     const band = framing.bands.find((b) => v.t >= b.start + 0.3 && v.t <= b.end - 0.4);
-    if (shot === undefined || shot.window || band === undefined || v.t < shot.t + SETTLE) continue;
+    if (shot === undefined || shot.window || band === undefined || v.t < shot.t + SETTLE || leaving(framing, lay, i, v.t)) continue;
     const at = subjectAt(framing, i, v.t);
     if (at === null || v.t < at.changed + GRACE) continue;
     const bottom = (lay.toCanvas(0, at.rect.y + at.rect.height)[1] - v.y) * (H / v.height);

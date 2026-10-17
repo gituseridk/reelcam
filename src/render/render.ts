@@ -49,7 +49,8 @@ async function encodeFrames(take: Take, dir: string, preset: Preset, output: str
   const views: ViewAt[] = [];
   for (let k = 0; k < Math.floor((t1 - t0) * preset.fps); k++) {
     const t = t0 + k * dt;
-    cam.step(framing.target(t), dt);
+    const ahead = t + preset.lead;
+    cam.step(framing.aim(t, cam.cx, cam.cy), dt, framing.subject(ahead) === null ? 0 : framing.reserve(Math.max(0, framing.index(ahead))));
     views.push({ t, ...(await comp.draw(t, cam, clickAge(take.clicks, t))) });
     capture(stills, comp.out, t, dt);
     await encoder.write(comp.out.data());
