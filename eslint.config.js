@@ -23,4 +23,11 @@ export default tseslint.config(
       '@typescript-eslint/no-floating-promises': 'error',
     },
   },
+  {
+    // Plain Node scripts: linted without type information.
+    files: ['scripts/**/*.mjs'],
+    ...tseslint.configs.disableTypeChecked,
+    languageOptions: { ...tseslint.configs.disableTypeChecked.languageOptions, globals: { process: 'readonly' } },
+    rules: { ...tseslint.configs.disableTypeChecked.rules, '@typescript-eslint/explicit-function-return-type': 'off' },
+  },
 );
