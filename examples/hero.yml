@@ -1,0 +1,13 @@
+# The README's hero video: one idea, add a task and finish it.
+title: Add a task, finish it
+serve: app
+viewport: { width: 1280, height: 720 }
+steps:
+  - wait: 1400
+  - focus: { on: "#composer", why: "typing stays inside the composer" }
+  - type: { into: "#new-task", text: "Record the launch video" }
+  - press: Enter
+  - focus: { on: "#today", why: "the payoff: the list and the progress ring" }
+  - click: "li:has-text('Record the launch video') .check"
+  - caption: Made with Showreel from 12 lines of YAML
+  - wait: 1800

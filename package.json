@@ -1,0 +1,36 @@
+{
+  "name": "showreel",
+  "version": "0.1.0",
+  "description": "Cinematic MP4 demo videos of any web app, from a short YAML script. CLI, GitHub Action and agent skill.",
+  "license": "Apache-2.0",
+  "type": "module",
+  "bin": { "showreel": "dist/cli.js" },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
+  "files": ["dist", "skills", "README.md", "LICENSE"],
+  "engines": { "node": ">=22.12" },
+  "keywords": ["demo", "video", "screencast", "playwright", "mp4", "camera", "agent", "github-action"],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint --max-warnings 0 .",
+    "test": "vitest run",
+    "check": "npm run lint && npm run typecheck && npm test",
+    "prepack": "npm run build"
+  },
+  "dependencies": {
+    "@napi-rs/canvas": "1.0.9",
+    "playwright": "1.63.0",
+    "yaml": "2.9.1",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@types/node": "24.19.0",
+    "eslint": "10.11.0",
+    "typescript": "6.0.3",
+    "typescript-eslint": "8.71.0",
+    "vitest": "5.0.2"
+  }
+}

@@ -1,0 +1,11 @@
+# A 9:16 phone video: a 390x844 viewport on the vertical preset.
+title: Done in one tap
+serve: app
+viewport: { width: 390, height: 844 }
+scale: 3
+preset: vertical
+steps:
+  - wait: 600
+  - click: "li:has-text('Draft the release notes') .check"
+  - caption: "2 of 3 done"
+  - wait: 1600

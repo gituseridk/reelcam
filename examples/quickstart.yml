@@ -1,0 +1,9 @@
+# The quickstart from the README: serve the demo app and add one task.
+serve: app
+viewport: { width: 1280, height: 720 }
+steps:
+  - focus: "#composer"
+  - type: { into: "#new-task", text: "Hello, Showreel" }
+  - press: Enter
+  - focus: "#today"
+  - wait: 1200

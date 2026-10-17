@@ -1,0 +1,14 @@
+/** The script `showreel init` writes: a working outline to edit, with every step kind shown. */
+export const STARTER = `# A Showreel script. Docs: README "Script format".
+# One idea per video. Start on the view, end right after the payoff.
+title: Create a project          # a pill shown for the first 2 s (optional)
+url: http://localhost:3000/       # your app, running locally (or use "serve: ./dist")
+preset: studio                    # studio, daylight, bare, vertical, square
+steps:
+  - focus: { on: "form", why: "typing stays inside the form" }   # camera frames this element
+  - type: { into: "input[name=name]", text: "Moonshot" }
+  - press: Enter
+  - wide: "the new project appears in the list"                 # camera back to the whole page
+  - caption: Projects are created instantly
+  - wait: 1500
+`;

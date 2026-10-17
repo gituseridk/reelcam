@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pebble · a tiny task list</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside class="side">
+    <div class="brand"><span class="logo"></span>Pebble</div>
+    <nav>
+      <a class="on" href="#">Today <span id="count-side">0</span></a>
+      <a href="#">Upcoming <span>6</span></a>
+      <a href="#">Launch <span>3</span></a>
+      <a href="#">Someday <span>9</span></a>
+    </nav>
+    <div class="me"><span class="avatar">M</span>Mira's tasks</div>
+  </aside>
+  <main>
+    <section id="today">
+    <header>
+      <div>
+        <p class="day">Friday, June 12</p>
+        <h1>Today</h1>
+      </div>
+      <div class="ring" id="ring" aria-label="progress">
+        <svg viewBox="0 0 44 44"><circle class="track" cx="22" cy="22" r="18"/><circle class="bar" id="bar" cx="22" cy="22" r="18"/></svg>
+        <span id="progress">0/0</span>
+      </div>
+    </header>
+    <form id="composer" autocomplete="off">
+      <span class="plus">+</span>
+      <input id="new-task" placeholder="Add a task, press Enter" aria-label="New task">
+      <button type="submit">Add</button>
+    </form>
+    <ul id="tasks"></ul>
+    </section>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
