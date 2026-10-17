@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { rawStep } from './steps.js';
 
 const size = z.number().int().min(200).max(3840);
+const OFF_CAMERA_ONLY = new Set(['focus', 'wide', 'caption']);
 
 export const scriptSchema = z
   .strictObject({
@@ -19,6 +20,11 @@ export const scriptSchema = z
     output: z.string().min(1).optional(),
     gif: z.boolean().default(false),
     seed: z.number().int().min(0).default(1),
+    /** Steps played before filming starts (sign in, dismiss a banner, give the app focus). */
+    setup: z
+      .array(rawStep)
+      .default([])
+      .refine((steps) => steps.every((s) => !OFF_CAMERA_ONLY.has(s.kind)), 'setup steps are not filmed: focus, wide and caption belong in "steps"'),
     steps: z.array(rawStep).min(1, 'a script needs at least one step'),
   })
   .refine((s) => s.url !== undefined || s.serve !== undefined, { message: 'give "url" (a page to open) or "serve" (a folder to serve)' });

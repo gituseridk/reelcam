@@ -1,0 +1,24 @@
+# Gallery: Excalidraw (MIT, excalidraw.com), built and served locally by build.sh.
+# One idea: sketch a two-step flow in seconds (tools by keyboard: R, A, O).
+serve: site
+viewport: { width: 1280, height: 720 }
+setup:
+  - click: "canvas.interactive"   # give the app keyboard focus before filming
+steps:
+  - wait: 1300
+  - focus: { area: [0.25, 0.3, 0.85, 0.68], why: "every stroke happens here" }
+  - press: r
+  - drag: { from: [0.29, 0.38], to: [0.45, 0.60], ms: 500 }
+  - press: Enter
+  - type: { text: "Write", delay: 70 }
+  - press: Escape
+  - press: a
+  - drag: { from: [0.47, 0.49], to: [0.62, 0.49], ms: 450 }
+  - press: o
+  - drag: { from: [0.64, 0.37], to: [0.82, 0.61], ms: 500 }
+  - press: Enter
+  - type: { text: "Ship", delay: 70 }
+  - press: Escape
+  - click: { at: [0.55, 0.66] }   # click away: nothing stays selected
+  - caption: Excalidraw, filmed by a 22-line script
+  - wait: 1800

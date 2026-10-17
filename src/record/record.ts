@@ -54,6 +54,10 @@ async function perform(page: Page, loaded: LoadedScript, base: string, dir: stri
   const actor = new Actor(page, seeded(script.seed), [script.viewport.width * 0.72, script.viewport.height * 0.8]);
   const stage: Stage = { page, actor, director, captions: [], resolveUrl: urlResolver(base) };
   const cdp = await page.context().newCDPSession(page);
+  if (script.setup.length > 0) {
+    log.info(`setup: ${String(script.setup.length)} steps before filming`);
+    await playSteps(stage, script.setup);
+  }
   const guard = watchText(page, script.forbid);
   const stop = await startScreencast(cdp, { width: script.viewport.width * script.scale, height: script.viewport.height * script.scale });
   await director.shot('start', 'window', 'the whole page');
@@ -71,7 +75,7 @@ async function perform(page: Page, loaded: LoadedScript, base: string, dir: stri
   const seconds = (frames.at(-1)?.t ?? 0) - (frames[0]?.t ?? 0);
   log.info(`recorded ${String(frames.length)} frames, ${seconds.toFixed(1)} s`);
   const vp = script.viewport;
-  return { version: 1, viewport: vp, scale: script.scale, times: frames.map((f) => f.t), pointer: actor.pointer, clicks: actor.clicks, shots: director.shots, subjects: director.subjects, hits, said: stage.captions };
+  return { version: 1, viewport: vp, scale: script.scale, times: frames.map((f) => f.t), pointer: actor.pointer, clicks: actor.clicks.filter((c) => c[0] >= (frames[0]?.t ?? 0)), shots: director.shots, subjects: director.subjects, hits, said: stage.captions };
 }
 
 /** Records `loaded` into `dir` and returns the take it wrote. */

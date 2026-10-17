@@ -1,6 +1,6 @@
 /** End to end: real Chromium, real ffmpeg, the demo app from examples/pebble. */
 import { execFileSync } from 'node:child_process';
-import { mkdtemp, stat, writeFile } from 'node:fs/promises';
+import { mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { loadImage, createCanvas } from '@napi-rs/canvas';
@@ -79,6 +79,15 @@ describe('render', () => {
     const a = await detail(path.join(dir, 'take-plain', 'frames', '00000.jpg'), ...region);
     const b = await detail(path.join(dir, 'take-hidden', 'frames', '00000.jpg'), ...region);
     expect(b).toBeLessThan(a * 0.5);
+  });
+
+  it('films a drag and a point click on an area shot, with off-camera setup', async () => {
+    const file = await script('canvas', 'setup:\n  - click: "#new-task"\nsteps:\n  - focus: { area: [0.2, 0.15, 0.8, 0.85] }\n  - drag: { from: [0.3, 0.5], to: [0.6, 0.55], ms: 300 }\n  - click: { at: [0.5, 0.6] }\n  - wait: 500\n');
+    const result = await render(file, { output: path.join(dir, 'canvas.mp4'), sheet: false, keep: path.join(dir, 'take-canvas') });
+    expect(result.problems).toEqual([]);
+    const take = JSON.parse(await readFile(path.join(dir, 'take-canvas', 'take.json'), 'utf8')) as { clicks: unknown[]; times: number[]; shots: { name: string }[] };
+    expect(take.clicks).toHaveLength(2); // the setup click is not in the film
+    expect(take.shots.map((s) => s.name)).toEqual(['steps[0] focus area']);
   });
 
   it('names the failing step and gives a hint when a selector never appears', async () => {

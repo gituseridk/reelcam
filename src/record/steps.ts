@@ -6,6 +6,7 @@ import type { Step } from '../script/steps.js';
 import { now } from '../take.js';
 import type { Actor } from './actor.js';
 import type { Director } from './director.js';
+import { resolvePoint } from './points.js';
 
 export interface Caption {
   t: number;
@@ -48,7 +49,10 @@ async function play(stage: Stage, step: Step, label: string): Promise<void> {
       await page.goto(stage.resolveUrl(step.url), { waitUntil: 'load' });
       return;
     case 'click':
-      return actor.click(await visible(stage, step.on));
+      if (typeof step.at === 'string') return actor.click(await visible(stage, step.at));
+      return actor.clickAt(await resolvePoint(page, step.at, step.on));
+    case 'drag':
+      return actor.drag(await resolvePoint(page, step.from, step.on), await resolvePoint(page, step.to, step.on), step.ms);
     case 'hover':
       return actor.moveTo(await visible(stage, step.on));
     case 'type':
@@ -64,6 +68,7 @@ async function play(stage: Stage, step: Step, label: string): Promise<void> {
       await visible(stage, step.on);
       return;
     case 'focus':
+      if (typeof step.on !== 'string') return director.shot(`${label} area`, step.on, step.why, step.zoom);
       return director.shot(`${label} ${step.on}`, await visible(stage, step.on), step.why, step.zoom);
     case 'wide':
       return director.shot(label, 'window', step.why);
@@ -75,9 +80,10 @@ async function play(stage: Stage, step: Step, label: string): Promise<void> {
 
 /** Runs every step in order; a failing step stops the take with its index and kind in the message. */
 export async function playSteps(stage: Stage, steps: readonly Step[]): Promise<void> {
+  const start = now();
   for (const [i, step] of steps.entries()) {
     const label = `steps[${String(i)}] ${step.kind}`;
-    log.debug(label);
+    log.debug(`${label} at ${(now() - start).toFixed(2)} s`);
     try {
       await play(stage, step, label);
     } catch (error) {

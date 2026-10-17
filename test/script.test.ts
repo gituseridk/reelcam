@@ -25,7 +25,7 @@ describe('validate', () => {
       't',
     );
     expect(s.steps).toEqual([
-      { kind: 'click', on: '#a' },
+      { kind: 'click', at: '#a', on: undefined },
       { kind: 'focus', on: '#b', why: '', zoom: undefined },
       { kind: 'scroll', by: 300, to: undefined, ms: 900 },
       { kind: 'caption', text: 'Hi', ms: 2000 },
@@ -101,5 +101,40 @@ describe('loadScript', () => {
   it('reports a missing file and bad YAML as UserError', async () => {
     await expect(loadScript('/no/such/file.yml')).rejects.toThrow(UserError);
     await expect(loadScript(await write('steps: [wide\n'))).rejects.toThrow(/not valid YAML/);
+  });
+});
+
+describe('canvas steps and setup', () => {
+  it('parses drag, click at a point and an area focus', () => {
+    const s = validate(
+      {
+        ...base,
+        steps: [
+          { drag: { from: [0.1, 0.2], to: '#target', on: 'canvas' } },
+          { click: { at: [0.5, 0.5] } },
+          { focus: { area: [0.1, 0.2, 0.9, 0.8], why: 'drawing' } },
+        ],
+      },
+      't',
+    );
+    expect(s.steps).toEqual([
+      { kind: 'drag', from: [0.1, 0.2], to: '#target', on: 'canvas', ms: 700 },
+      { kind: 'click', at: [0.5, 0.5], on: undefined },
+      { kind: 'focus', on: { area: [0.1, 0.2, 0.9, 0.8] }, why: 'drawing', zoom: undefined },
+    ]);
+  });
+
+  it.each([
+    [{ focus: { area: [0.5, 0.2, 0.4, 0.8] } }, 'right > left'],
+    [{ focus: { on: '#a', area: [0, 0, 1, 1] } }, 'exactly one of'],
+    [{ focus: {} }, 'exactly one of'],
+    [{ drag: { from: [1.5, 0], to: [0, 0] } }, 'steps[0].drag.from'],
+  ])('rejects %j', (step, message) => {
+    expect(() => validate({ ...base, steps: [step] }, 't')).toThrow(message);
+  });
+
+  it('plays setup steps off camera, and keeps camera steps out of setup', () => {
+    expect(validate({ ...base, setup: [{ click: '#cookies' }], steps: ['wide'] }, 't').setup).toHaveLength(1);
+    expect(() => validate({ ...base, setup: [{ caption: 'x' }], steps: ['wide'] }, 't')).toThrow(/setup steps are not filmed/);
   });
 });

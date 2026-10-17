@@ -5,7 +5,9 @@ import { UserError, describe } from '../errors.js';
 import { log } from '../log.js';
 import { now, sleep, type Rect, type Shot } from '../take.js';
 
-export type Subject = 'window' | Locator;
+/** What a shot frames: the whole page, an element (re-measured while the shot lasts), or a fixed
+ *  region given as fractions [left, top, right, bottom] of the page. */
+export type Subject = 'window' | Locator | { area: [number, number, number, number] };
 
 export class Director {
   readonly shots: Shot[] = [];
@@ -20,6 +22,10 @@ export class Director {
     const vp = this.page.viewportSize();
     if (vp === null) throw new UserError('the page has no viewport size');
     if (subject === 'window') return { x: 0, y: 0, width: vp.width, height: vp.height };
+    if ('area' in subject) {
+      const [x0, y0, x1, y1] = subject.area;
+      return { x: x0 * vp.width, y: y0 * vp.height, width: (x1 - x0) * vp.width, height: (y1 - y0) * vp.height };
+    }
     const box = await subject.boundingBox({ timeout: 400 }).catch((error: unknown) => {
       log.debug(`subject not measurable now: ${describe(error)}`);
       return null;
@@ -41,7 +47,7 @@ export class Director {
     this.dropInstantShot();
     const index = this.shots.length;
     this.shots.push({ t: now(), name, why, window: subject === 'window', rect, ...(zoom === undefined ? {} : { zoom }) });
-    if (subject === 'window') return;
+    if (subject === 'window' || 'area' in subject) return;
     const token = {};
     this.token = token;
     this.sampler = this.sample(subject, index, token);

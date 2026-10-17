@@ -7,25 +7,45 @@ const ms = z.number().int().min(0).max(60_000);
 
 export type Step =
   | { kind: 'visit'; url: string }
-  | { kind: 'click'; on: string }
+  | { kind: 'click'; at: Point; on: string | undefined }
   | { kind: 'hover'; on: string }
+  | { kind: 'drag'; from: Point; to: Point; on: string | undefined; ms: number }
   | { kind: 'type'; into: string | undefined; text: string; delay: number }
   | { kind: 'press'; key: string }
   | { kind: 'scroll'; by: number; to: string | undefined; ms: number }
   | { kind: 'wait'; ms: number }
   | { kind: 'waitFor'; on: string }
-  | { kind: 'focus'; on: string; why: string; zoom: number | undefined }
+  | { kind: 'focus'; on: string | Area; why: string; zoom: number | undefined }
   | { kind: 'wide'; why: string }
   | { kind: 'caption'; text: string; ms: number };
 
-const focusLong = z.strictObject({ on: selector, why: z.string().default(''), zoom: z.number().min(1).max(4).optional() });
+/** A point: a selector (its centre) or [x, y] as fractions of the `on` element (default: the page). */
+export type Point = string | [number, number];
+const fraction = z.number().min(0).max(1);
+const point = z.union([selector, z.tuple([fraction, fraction])]);
+
+/** A region of the page as fractions [left, top, right, bottom], for canvas apps (drawings, maps). */
+export interface Area {
+  area: [number, number, number, number];
+}
+const area = z
+  .tuple([fraction, fraction, fraction, fraction])
+  .refine(([x0, y0, x1, y1]) => x1 > x0 && y1 > y0, 'an area is [left, top, right, bottom] with right > left and bottom > top');
+const focusLong = z
+  .strictObject({ on: selector.optional(), area: area.optional(), why: z.string().default(''), zoom: z.number().min(1).max(4).optional() })
+  .refine((v) => (v.on === undefined) !== (v.area === undefined), 'give exactly one of "on" (a selector) or "area" ([left, top, right, bottom])');
 const scrollLong = z.strictObject({ by: z.number().int().default(0), to: selector.optional(), ms: ms.default(900) });
 
 /** One schema per step key; each turns the step's value into a Step. */
 export const STEP_SCHEMAS = {
   visit: z.string().min(1).transform((url): Step => ({ kind: 'visit', url })),
-  click: selector.transform((on): Step => ({ kind: 'click', on })),
+  click: z
+    .union([selector, z.strictObject({ at: point, on: selector.optional() })])
+    .transform((v): Step => (typeof v === 'string' ? { kind: 'click', at: v, on: undefined } : { kind: 'click', at: v.at, on: v.on })),
   hover: selector.transform((on): Step => ({ kind: 'hover', on })),
+  drag: z
+    .strictObject({ from: point, to: point, on: selector.optional(), ms: z.number().int().min(100).max(10_000).default(700) })
+    .transform((v): Step => ({ kind: 'drag', from: v.from, to: v.to, on: v.on, ms: v.ms })),
   type: z
     .strictObject({ into: selector.optional(), text: z.string(), delay: z.number().int().min(0).max(1000).default(45) })
     .transform((v): Step => ({ kind: 'type', into: v.into, text: v.text, delay: v.delay })),
@@ -37,7 +57,7 @@ export const STEP_SCHEMAS = {
   waitFor: selector.transform((on): Step => ({ kind: 'waitFor', on })),
   focus: z
     .union([selector, focusLong])
-    .transform((v): Step => (typeof v === 'string' ? { kind: 'focus', on: v, why: '', zoom: undefined } : { kind: 'focus', on: v.on, why: v.why, zoom: v.zoom })),
+    .transform((v): Step => (typeof v === 'string' ? { kind: 'focus', on: v, why: '', zoom: undefined } : { kind: 'focus', on: v.area === undefined ? (v.on ?? '') : { area: v.area }, why: v.why, zoom: v.zoom })),
   zoom: z
     .strictObject({ on: selector, level: z.number().min(1).max(4), why: z.string().default('') })
     .transform((v): Step => ({ kind: 'focus', on: v.on, why: v.why, zoom: v.level })),

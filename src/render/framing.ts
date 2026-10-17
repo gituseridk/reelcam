@@ -84,6 +84,12 @@ export class Framing {
     return 1 + preset.breathe * ease(Math.min(1, Math.max(0, (t - start) / preset.breatheSeconds)));
   }
 
+  /** For wide shots: the band of an overlay shown now (from just before it appears), so a wide shot
+   *  pulls back only while a caption shows. */
+  reserveNow(t: number): number {
+    return Math.max(0, ...this.bands.filter((b) => t >= b.start - 0.4 && t <= b.end).map((b) => b.height));
+  }
+
   /** A wide shot: the page fills the frame and breathes; with a caption band it pulls back just
    *  enough for the whole page to sit above the band. */
   wide(t: number, reserve: number): [number, number, number] {
@@ -100,7 +106,7 @@ export class Framing {
   target(t: number): [number, number, number] {
     const { preset } = this.lay;
     const i = Math.max(0, this.index(t)); // before the first cut, the first shot already holds
-    const rest = this.wide(t, this.reserve(i));
+    const rest = this.wide(t, this.reserveNow(t));
     const shot = this.shots[i];
     const r = this.subject(t);
     if (shot === undefined || r === null) return rest;

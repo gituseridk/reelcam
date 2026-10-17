@@ -59,13 +59,37 @@ export class Actor {
 
   async click(target: Locator): Promise<void> {
     await this.moveTo(target);
+    await this.tap();
+  }
+
+  /** Clicks a point on the page (for canvas apps): moves there like a person, then clicks. */
+  async clickAt(to: [number, number]): Promise<void> {
+    await this.glide(to, glideMs(Math.hypot(to[0] - this.x, to[1] - this.y)));
+    await this.tap();
+  }
+
+  private async tap(): Promise<void> {
     await this.wait(200);
     this.clicks.push([now(), this.x, this.y]);
     await this.page.mouse.down();
     await sleep(60);
     await this.page.mouse.up();
     await this.wait(120);
-    await this.glide([this.x + DRIFT[0], this.y + DRIFT[1]], 420); // the hand eases off, uncovering the result
+    await this.glide([this.x + DRIFT[0], this.y + DRIFT[1]], 300); // the hand eases off, uncovering the result
+  }
+
+  /** Presses at `from`, moves to `to` in `ms` along an eased path, and releases (draw, drag and drop). */
+  async drag(from: [number, number], to: [number, number], ms: number): Promise<void> {
+    await this.glide(from, glideMs(Math.hypot(from[0] - this.x, from[1] - this.y)));
+    await this.wait(150);
+    this.clicks.push([now(), this.x, this.y]);
+    await this.page.mouse.down();
+    await this.wait(80);
+    await this.glide(to, ms);
+    await this.wait(80);
+    await this.page.mouse.up();
+    await this.wait(120);
+    await this.glide([this.x + DRIFT[0], this.y + DRIFT[1]], 300);
   }
 
   /** Types like a person: one key at a time, `delay` ms apart with a little seeded jitter. */
