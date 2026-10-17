@@ -5,7 +5,7 @@ import { realpath, stat } from 'node:fs/promises';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import type { AddressInfo } from 'node:net';
 import path from 'node:path';
-import { ShowreelError, describe } from '../errors.js';
+import { UserError, describe } from '../errors.js';
 import { log } from '../log.js';
 
 const TYPES: Record<string, string> = {
@@ -70,7 +70,7 @@ export async function serveFolder(dir: string): Promise<Served> {
   try {
     root = await realpath(dir);
   } catch (error) {
-    throw new ShowreelError(`cannot serve ${dir}: ${describe(error)}`, 'The "serve" path is relative to the script file.', { cause: error });
+    throw new UserError(`cannot serve ${dir}: ${describe(error)}`, 'The "serve" path is relative to the script file.', { cause: error });
   }
   const server = createServer((req, res) => {
     handle(root, req, res).catch((error: unknown) => {

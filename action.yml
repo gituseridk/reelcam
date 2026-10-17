@@ -65,11 +65,11 @@ runs:
       id: render
       shell: bash
       env:
-        SHOWREEL_SCRIPT: ${{ inputs.script }}
-        SHOWREEL_OUTPUT: ${{ inputs.output }}
-        SHOWREEL_PRESET: ${{ inputs.preset }}
-        SHOWREEL_GIF: ${{ inputs.gif }}
-        SHOWREEL_ALLOW_REMOTE: ${{ inputs.allow-remote }}
+        RENDER_SCRIPT: ${{ inputs.script }}
+        RENDER_OUTPUT: ${{ inputs.output }}
+        RENDER_PRESET: ${{ inputs.preset }}
+        RENDER_GIF: ${{ inputs.gif }}
+        RENDER_ALLOW_REMOTE: ${{ inputs.allow-remote }}
       run: bash "$GITHUB_ACTION_PATH/action/render.sh"
     - name: Upload
       if: always() && inputs.upload == 'true' && steps.render.outputs.video != ''

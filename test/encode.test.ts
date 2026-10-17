@@ -2,14 +2,14 @@ import { mkdtemp, stat } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
-import { ShowreelError } from '../src/errors.js';
+import { UserError } from '../src/errors.js';
 import { getPreset } from '../src/presets/index.js';
-import { Encoder, gifArgs, mp4Args, runFfmpeg } from '../src/render/encode.js';
+import { Encoder, FFMPEG_ENV, gifArgs, mp4Args, runFfmpeg } from '../src/render/encode.js';
 
 const tiny = { ...getPreset('studio'), width: 64, height: 36 };
 
 afterEach(() => {
-  delete process.env.SHOWREEL_FFMPEG;
+  Reflect.deleteProperty(process.env, FFMPEG_ENV);
 });
 
 describe('ffmpeg arguments', () => {
@@ -35,9 +35,9 @@ describe('Encoder', () => {
     expect((await stat(out)).size).toBeGreaterThan(100);
   });
 
-  it('turns a missing ffmpeg into a ShowreelError with an install hint', async () => {
-    process.env.SHOWREEL_FFMPEG = '/no/such/ffmpeg';
-    await expect(runFfmpeg(['-version'])).rejects.toThrow(ShowreelError);
+  it('turns a missing ffmpeg into a UserError with an install hint', async () => {
+    process.env[FFMPEG_ENV] = '/no/such/ffmpeg';
+    await expect(runFfmpeg(['-version'])).rejects.toThrow(UserError);
     const enc = new Encoder(tiny, path.join(os.tmpdir(), 'showreel-never.mp4'));
     await expect(enc.finish()).rejects.toThrow(/cannot run ffmpeg/);
   });

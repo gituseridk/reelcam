@@ -1,10 +1,10 @@
-/** Every failure Showreel reports to a user: a short message plus a hint on how to fix it. */
-export class ShowreelError extends Error {
+/** Every failure reported to a user: a short message plus a hint on how to fix it. */
+export class UserError extends Error {
   readonly hint: string | undefined;
 
   constructor(message: string, hint?: string, options?: { cause?: unknown }) {
     super(message, options);
-    this.name = 'ShowreelError';
+    this.name = 'UserError';
     this.hint = hint;
   }
 }

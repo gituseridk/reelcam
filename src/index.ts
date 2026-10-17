@@ -1,14 +1,16 @@
-/** Showreel's programmatic API: `render("demo.yml")` records the script and writes the MP4. */
+/** The programmatic API: `render("demo.yml")` records the script and writes the MP4. */
 import { mkdtemp, rm } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { NAME } from './brand.js';
 import { log } from './log.js';
 import { getPreset } from './presets/index.js';
 import { record } from './record/record.js';
 import { renderTake, type RenderResult } from './render/render.js';
 import { loadScript } from './script/load.js';
 
-export { ShowreelError } from './errors.js';
+export { UserError } from './errors.js';
+export { DISPLAY_NAME, NAME, VERSION } from './brand.js';
 export { PRESETS, getPreset, type Preset } from './presets/index.js';
 export { loadScript, validate } from './script/load.js';
 export type { Script } from './script/schema.js';
@@ -33,7 +35,7 @@ export interface RenderOptions {
 export async function render(file: string, options: RenderOptions = {}): Promise<RenderResult> {
   const loaded = await loadScript(file, { output: options.output, allowRemote: options.allowRemote });
   const preset = getPreset(options.preset ?? loaded.script.preset);
-  const dir = options.keep === undefined ? await mkdtemp(path.join(os.tmpdir(), 'showreel-')) : path.resolve(options.keep);
+  const dir = options.keep === undefined ? await mkdtemp(path.join(os.tmpdir(), `${NAME}-`)) : path.resolve(options.keep);
   try {
     const take = await record(loaded, preset, dir);
     return await renderTake(take, dir, preset, { output: loaded.output, gif: options.gif ?? loaded.script.gif, sheet: options.sheet ?? true });

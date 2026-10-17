@@ -1,7 +1,7 @@
 /** The hand of a take: a pointer that moves like a person on the real page (curved, eased, a
  *  dwell before each click) and logs every position and click on the take's clock. */
 import type { Locator, Page } from 'playwright';
-import { ShowreelError } from '../errors.js';
+import { UserError } from '../errors.js';
 import { now, sleep } from '../take.js';
 import { ease, glideMs, glidePoint } from './motion.js';
 
@@ -29,7 +29,7 @@ export class Actor {
   async centre(target: Locator): Promise<[number, number]> {
     await target.scrollIntoViewIfNeeded({ timeout: 10_000 });
     const box = await target.boundingBox();
-    if (box === null) throw new ShowreelError('the element has no box on the page (is it hidden?)');
+    if (box === null) throw new UserError('the element has no box on the page (is it hidden?)');
     return [box.x + box.width / 2, box.y + box.height / 2];
   }
 

@@ -1,6 +1,7 @@
 {
   "name": "showreel",
   "version": "0.1.0",
+  "displayName": "Showreel",
   "description": "Cinematic MP4 demo videos of any web app, from a short YAML script. CLI, GitHub Action and agent skill.",
   "license": "Apache-2.0",
   "type": "module",

@@ -3,13 +3,13 @@
 # the script), outputs go to $GITHUB_OUTPUT.
 set -euo pipefail
 
-: "${SHOWREEL_SCRIPT:?the "script" input is required}"
+: "${RENDER_SCRIPT:?the "script" input is required}"
 cli="${GITHUB_ACTION_PATH:?}/dist/cli.js"
-args=(render "$SHOWREEL_SCRIPT")
-[[ -n "${SHOWREEL_OUTPUT:-}" ]] && args+=(--out "$SHOWREEL_OUTPUT")
-[[ -n "${SHOWREEL_PRESET:-}" ]] && args+=(--preset "$SHOWREEL_PRESET")
-[[ "${SHOWREEL_GIF:-false}" == "true" ]] && args+=(--gif)
-[[ "${SHOWREEL_ALLOW_REMOTE:-false}" == "true" ]] && args+=(--allow-remote)
+args=(render "$RENDER_SCRIPT")
+[[ -n "${RENDER_OUTPUT:-}" ]] && args+=(--out "$RENDER_OUTPUT")
+[[ -n "${RENDER_PRESET:-}" ]] && args+=(--preset "$RENDER_PRESET")
+[[ "${RENDER_GIF:-false}" == "true" ]] && args+=(--gif)
+[[ "${RENDER_ALLOW_REMOTE:-false}" == "true" ]] && args+=(--allow-remote)
 
 status=0
 files="$(node "$cli" "${args[@]}")" || status=$?
@@ -29,5 +29,5 @@ done <<< "$files"
   echo "sheet=$sheet"
   echo "status=$status"
 } >> "${GITHUB_OUTPUT:-/dev/null}"
-echo "showreel: video=$video sheet=$sheet exit=$status"
+echo "render: video=$video sheet=$sheet exit=$status"
 exit "$status"

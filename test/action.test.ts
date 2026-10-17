@@ -46,7 +46,7 @@ describe('action/render.sh', () => {
   it('renders the script and writes the step outputs', async () => {
     const dir = await mkdtemp(path.join(os.tmpdir(), 'showreel-action-'));
     const outputs = path.join(dir, 'outputs.txt');
-    const env = { ...process.env, GITHUB_ACTION_PATH: process.cwd(), GITHUB_OUTPUT: outputs, SHOWREEL_SCRIPT: 'examples/quickstart.yml', SHOWREEL_OUTPUT: path.join(dir, 'q.mp4') };
+    const env = { ...process.env, GITHUB_ACTION_PATH: process.cwd(), GITHUB_OUTPUT: outputs, RENDER_SCRIPT: 'examples/quickstart.yml', RENDER_OUTPUT: path.join(dir, 'q.mp4') };
     const res = spawnSync('bash', ['action/render.sh'], { env, encoding: 'utf8' });
     expect(res.status, res.stderr).toBe(0);
     const out = await readFile(outputs, 'utf8');
@@ -56,7 +56,7 @@ describe('action/render.sh', () => {
   });
 
   it('fails without a script', () => {
-    const res = spawnSync('bash', ['action/render.sh'], { env: { ...process.env, GITHUB_ACTION_PATH: process.cwd(), SHOWREEL_SCRIPT: '' }, encoding: 'utf8' });
+    const res = spawnSync('bash', ['action/render.sh'], { env: { ...process.env, GITHUB_ACTION_PATH: process.cwd(), RENDER_SCRIPT: '' }, encoding: 'utf8' });
     expect(res.status).not.toBe(0);
     expect(res.stderr).toContain('script');
   });

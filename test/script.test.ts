@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { ShowreelError } from '../src/errors.js';
+import { UserError } from '../src/errors.js';
 import { isLocalUrl, loadScript, validate } from '../src/script/load.js';
 
 const base = { url: 'http://localhost:3000' };
@@ -98,8 +98,8 @@ describe('loadScript', () => {
     expect(loaded.script.allowRemote).toBe(true);
   });
 
-  it('reports a missing file and bad YAML as ShowreelError', async () => {
-    await expect(loadScript('/no/such/file.yml')).rejects.toThrow(ShowreelError);
+  it('reports a missing file and bad YAML as UserError', async () => {
+    await expect(loadScript('/no/such/file.yml')).rejects.toThrow(UserError);
     await expect(loadScript(await write('steps: [wide\n'))).rejects.toThrow(/not valid YAML/);
   });
 });

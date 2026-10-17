@@ -1,5 +1,7 @@
-/** The script `showreel init` writes: a working outline to edit, with every step kind shown. */
-export const STARTER = `# A Showreel script. Docs: README "Script format".
+/** The script `init` writes: a working outline to edit, with the common step kinds shown. */
+import { DISPLAY_NAME } from './brand.js';
+
+export const STARTER = `# A ${DISPLAY_NAME} script. Docs: README "Script format".
 # One idea per video. Start on the view, end right after the payoff.
 title: Create a project          # a pill shown for the first 2 s (optional)
 url: http://localhost:3000/       # your app, running locally (or use "serve: ./dist")

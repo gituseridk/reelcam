@@ -1,4 +1,4 @@
-/** The shape of a Showreel script (YAML), validated with zod. See docs in README "Script format". */
+/** The shape of a script (YAML), validated with zod. See docs in README "Script format". */
 import { z } from 'zod';
 import { rawStep } from './steps.js';
 

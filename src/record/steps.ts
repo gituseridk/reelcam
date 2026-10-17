@@ -1,6 +1,6 @@
 /** Plays a script's steps on the page: the actor for the hand, the director for the camera. */
 import type { Page } from 'playwright';
-import { ShowreelError, describe } from '../errors.js';
+import { UserError, describe } from '../errors.js';
 import { log } from '../log.js';
 import type { Step } from '../script/steps.js';
 import { now } from '../take.js';
@@ -35,7 +35,7 @@ async function scroll(stage: Stage, by: number, to: string | undefined, ms: numb
   if (to !== undefined) {
     const box = await (await visible(stage, to)).boundingBox();
     const vp = stage.page.viewportSize();
-    if (box === null || vp === null) throw new ShowreelError(`scroll: "${to}" has no box`);
+    if (box === null || vp === null) throw new UserError(`scroll: "${to}" has no box`);
     dy = box.y + box.height / 2 - vp.height / 2;
   }
   await stage.actor.scroll(dy, ms);
@@ -81,8 +81,8 @@ export async function playSteps(stage: Stage, steps: readonly Step[]): Promise<v
     try {
       await play(stage, step, label);
     } catch (error) {
-      if (error instanceof ShowreelError) throw new ShowreelError(`${label}: ${error.message}`, error.hint, { cause: error });
-      throw new ShowreelError(`${label} failed: ${describe(error)}`, 'Check the selector in the browser devtools, or add a "waitFor" step before it.', { cause: error });
+      if (error instanceof UserError) throw new UserError(`${label}: ${error.message}`, error.hint, { cause: error });
+      throw new UserError(`${label} failed: ${describe(error)}`, 'Check the selector in the browser devtools, or add a "waitFor" step before it.', { cause: error });
     }
   }
 }

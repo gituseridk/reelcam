@@ -18,7 +18,7 @@ export async function installRedaction(context: BrowserContext, selectors: reado
   await context.addInitScript((text: string) => {
     const add = (): void => {
       const style = document.createElement('style');
-      style.dataset.showreel = 'redact';
+      style.dataset.redact = '';
       style.textContent = text;
       document.documentElement.append(style);
     };

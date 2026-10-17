@@ -1,11 +1,13 @@
-/** ffmpeg: raw RGBA frames in, H.264 MP4 out (and an optional palette GIF). Set SHOWREEL_FFMPEG
- *  to use a specific binary. */
+/** ffmpeg: raw RGBA frames in, H.264 MP4 out (and an optional palette GIF). Set <PREFIX>_FFMPEG
+ *  (e.g. REELCAM_FFMPEG) to use a specific binary. */
 import { spawn, type ChildProcess, type ChildProcessWithoutNullStreams } from 'node:child_process';
 import { once } from 'node:events';
-import { ShowreelError, describe } from '../errors.js';
+import { ENV_PREFIX } from '../brand.js';
+import { UserError, describe } from '../errors.js';
 import type { Preset } from '../presets/index.js';
 
-export const ffmpegBin = (): string => process.env.SHOWREEL_FFMPEG ?? 'ffmpeg';
+export const FFMPEG_ENV = `${ENV_PREFIX}FFMPEG`;
+export const ffmpegBin = (): string => process.env[FFMPEG_ENV] ?? 'ffmpeg';
 
 export function mp4Args(preset: Preset, output: string): string[] {
   const size = `${String(preset.width)}x${String(preset.height)}`;
@@ -18,8 +20,8 @@ export function gifArgs(input: string, output: string, width: number): string[] 
   return ['-nostdin', '-loglevel', 'error', '-y', '-i', input, '-vf', filter, output];
 }
 
-function missing(error: unknown): ShowreelError {
-  return new ShowreelError(`cannot run ffmpeg (${ffmpegBin()}): ${describe(error)}`, 'Install ffmpeg (e.g. "sudo apt-get install ffmpeg" or "brew install ffmpeg"), or set SHOWREEL_FFMPEG.', { cause: error });
+function missing(error: unknown): UserError {
+  return new UserError(`cannot run ffmpeg (${ffmpegBin()}): ${describe(error)}`, `Install ffmpeg (e.g. "sudo apt-get install ffmpeg" or "brew install ffmpeg"), or set ${FFMPEG_ENV}.`, { cause: error });
 }
 
 /** Resolves with the exit code, or rejects when the process could not start. */
@@ -40,7 +42,7 @@ export async function runFfmpeg(args: string[]): Promise<void> {
     stderr += chunk.toString();
   });
   const code = await exited(proc);
-  if (code !== 0) throw new ShowreelError(`ffmpeg failed (exit ${String(code)}): ${stderr.trim()}`);
+  if (code !== 0) throw new UserError(`ffmpeg failed (exit ${String(code)}): ${stderr.trim()}`);
 }
 
 /** A running MP4 encoder: write RGBA frames, then finish(). */
@@ -77,6 +79,6 @@ export class Encoder {
   async finish(): Promise<void> {
     this.proc.stdin.end();
     const code = await this.done;
-    if (code !== 0) throw new ShowreelError(`ffmpeg failed (exit ${String(code)}): ${this.stderr.trim()}`);
+    if (code !== 0) throw new UserError(`ffmpeg failed (exit ${String(code)}): ${this.stderr.trim()}`);
   }
 }

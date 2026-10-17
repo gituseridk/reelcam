@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-/** The command line: `showreel render script.yml`, `showreel check`, `showreel presets`, `showreel init`. */
+/** The command line: render, check, init, setup, presets (usage text in commands.ts). */
 import { parseArgs } from 'node:util';
-import { ShowreelError, describe } from './errors.js';
+import { UserError, describe } from './errors.js';
 import { log, setLevel } from './log.js';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
@@ -51,7 +51,7 @@ export async function main(argv: string[], print: (text: string) => void): Promi
   try {
     return await command(rest, values, print);
   } catch (error) {
-    if (!(error instanceof ShowreelError)) {
+    if (!(error instanceof UserError)) {
       log.error(error instanceof Error && error.stack !== undefined ? error.stack : describe(error));
       return EXIT.error;
     }

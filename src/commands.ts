@@ -1,7 +1,8 @@
-/** The CLI's commands. Each returns an exit code; failures throw ShowreelError. */
+/** The CLI's commands. Each returns an exit code; failures throw UserError. */
 import { access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
-import { ShowreelError } from './errors.js';
+import { NAME } from './brand.js';
+import { UserError } from './errors.js';
 import { render } from './index.js';
 import { log } from './log.js';
 import { PRESETS } from './presets/index.js';
@@ -26,15 +27,15 @@ export interface Values {
 
 type Command = (args: string[], values: Values, print: (text: string) => void) => Promise<number>;
 
-export const USAGE = `showreel: cinematic demo videos of web apps from a YAML script
+export const USAGE = `${NAME}: cinematic demo videos of web apps from a YAML script
 
 Usage:
-  showreel render <script.yml> [options]   record the script and write an MP4
-  showreel check <script.yml>              validate a script without recording
-  showreel init [file]                     write a starter script (default: showreel.yml)
-  showreel init --demo [dir]               copy a demo app and a script that records it (default: showreel-demo)
-  showreel setup [--with-deps]             install Chromium (--with-deps: also system libraries, Linux)
-  showreel presets                         list the built-in looks
+  ${NAME} render <script.yml> [options]   record the script and write an MP4
+  ${NAME} check <script.yml>              validate a script without recording
+  ${NAME} init [file]                     write a starter script (default: ${NAME}.yml)
+  ${NAME} init --demo [dir]               copy a demo app and a script that records it (default: ${NAME}-demo)
+  ${NAME} setup [--with-deps]             install Chromium (--with-deps: also system libraries, Linux)
+  ${NAME} presets                         list the built-in looks
 
 Options for render:
   -o, --out <file.mp4>   where to write the video (default: out/<script>.mp4)
@@ -50,7 +51,7 @@ Exit codes: 0 ok, 1 the video was written but failed its checks, 2 usage, 3 erro
 
 function one(args: string[], what: string): string {
   const [file, extra] = args;
-  if (file === undefined || extra !== undefined) throw new ShowreelError(`expected exactly one ${what}`, 'Run "showreel --help".');
+  if (file === undefined || extra !== undefined) throw new UserError(`expected exactly one ${what}`, `Run "${NAME} --help".`);
   return file;
 }
 
@@ -81,15 +82,15 @@ const checkCommand: Command = async (args, _values, print) => {
 
 const initCommand: Command = async (args, values, print) => {
   if (values.demo === true) {
-    print(await writeDemo(args[0] ?? 'showreel-demo', values.force === true));
+    print(await writeDemo(args[0] ?? `${NAME}-demo`, values.force === true));
     return EXIT.ok;
   }
-  const file = args[0] ?? 'showreel.yml';
+  const file = args[0] ?? `${NAME}.yml`;
   const exists = await access(file).then(
     () => true,
     () => false,
   );
-  if (exists && values.force !== true) throw new ShowreelError(`${file} already exists`, 'Pass --force to overwrite it.');
+  if (exists && values.force !== true) throw new UserError(`${file} already exists`, 'Pass --force to overwrite it.');
   await writeFile(file, STARTER);
   print(file);
   return EXIT.ok;

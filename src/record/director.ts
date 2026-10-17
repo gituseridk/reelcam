@@ -1,7 +1,7 @@
 /** The director of a take: names each camera shot and keeps measuring its subject while the shot
  *  lasts, so the renderer frames the whole subject even when it grows. Rules: README "Camera". */
 import type { Locator, Page } from 'playwright';
-import { ShowreelError, describe } from '../errors.js';
+import { UserError, describe } from '../errors.js';
 import { log } from '../log.js';
 import { now, sleep, type Rect, type Shot } from '../take.js';
 
@@ -18,7 +18,7 @@ export class Director {
   /** The subject's box in page px, clipped to the window; null when it is not on the page. */
   async rect(subject: Subject): Promise<Rect | null> {
     const vp = this.page.viewportSize();
-    if (vp === null) throw new ShowreelError('the page has no viewport size');
+    if (vp === null) throw new UserError('the page has no viewport size');
     if (subject === 'window') return { x: 0, y: 0, width: vp.width, height: vp.height };
     const box = await subject.boundingBox({ timeout: 400 }).catch((error: unknown) => {
       log.debug(`subject not measurable now: ${describe(error)}`);
@@ -37,7 +37,7 @@ export class Director {
   async shot(name: string, subject: Subject, why: string, zoom?: number): Promise<void> {
     await this.stop();
     const rect = await this.rect(subject);
-    if (rect === null) throw new ShowreelError(`shot "${name}": the subject is not visible on the page`, 'Scroll it into view first, or wait for it with "waitFor".');
+    if (rect === null) throw new UserError(`shot "${name}": the subject is not visible on the page`, 'Scroll it into view first, or wait for it with "waitFor".');
     this.dropInstantShot();
     const index = this.shots.length;
     this.shots.push({ t: now(), name, why, window: subject === 'window', rect, ...(zoom === undefined ? {} : { zoom }) });

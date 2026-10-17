@@ -1,3 +1,5 @@
+import { NAME } from './brand.js';
+
 /** A small leveled logger that writes to stderr, so stdout stays clean for machine output. */
 export type Level = 'quiet' | 'info' | 'debug';
 
@@ -27,16 +29,16 @@ function emit(level: Level, tag: string, message: string): void {
 
 export const log = {
   info: (message: string): void => {
-    emit('info', 'showreel', message);
+    emit('info', NAME, message);
   },
   debug: (message: string): void => {
-    emit('debug', 'showreel:debug', message);
+    emit('debug', `${NAME}:debug`, message);
   },
   warn: (message: string): void => {
-    emit('info', 'showreel: warning:', message);
+    emit('info', `${NAME}: warning:`, message);
   },
   /** Errors are always written, whatever the level. */
   error: (message: string): void => {
-    sink(`showreel: error: ${message}`);
+    sink(`${NAME}: error: ${message}`);
   },
 };

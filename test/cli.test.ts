@@ -2,6 +2,7 @@ import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { NAME } from '../src/brand.js';
 import { main } from '../src/cli.js';
 import { setSink } from '../src/log.js';
 
@@ -24,7 +25,7 @@ const run = (...argv: string[]): Promise<number> => main(argv, (text) => printed
 describe('cli', () => {
   it('prints usage with no command and with --help', async () => {
     expect(await run()).toBe(0);
-    expect(printed.join('\n')).toContain('showreel render <script.yml>');
+    expect(printed.join('\n')).toContain(`${NAME} render <script.yml>`);
     expect(await run('render', '--help')).toBe(0);
   });
 
