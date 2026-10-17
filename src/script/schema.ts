@@ -19,6 +19,7 @@ export const scriptSchema = z
     forbid: z.array(z.string().min(1)).default([]),
     output: z.string().min(1).optional(),
     gif: z.boolean().default(false),
+    checks: z.strictObject({ neighbours: z.boolean().default(true) }).default({ neighbours: true }),
     seed: z.number().int().min(0).default(1),
     /** Steps played before filming starts (sign in, dismiss a banner, give the app focus). */
     setup: z

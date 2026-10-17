@@ -60,6 +60,14 @@ export function spring(x: number, v: number, target: number, half: number, dt: n
 }
 
 /** Camera state (cx, cy, zoom) that follows a target on springs; zoom moves in log space. */
+/** The critically damped spring's own curve, scaled to land exactly at k = 1 (slow start, quick
+ *  middle, soft landing). */
+export function landing(k: number): number {
+  const a = 6;
+  const f = (x: number): number => 1 - (1 + a * x) * Math.exp(-a * x);
+  return f(Math.min(1, Math.max(0, k))) / f(1);
+}
+
 export class Camera {
   cx: number;
   cy: number;
@@ -68,6 +76,7 @@ export class Camera {
   slack = 0;
   private v: [number, number, number] = [0, 0, 0];
   private vSlack = 0;
+  private move: { from: [number, number, number, number]; start: number; duration: number } | null = null;
 
   constructor(
     w: number,
@@ -76,6 +85,29 @@ export class Camera {
   ) {
     this.cx = w / 2;
     this.cy = h / 2;
+  }
+
+  /** A cut: from now on, a move of exactly `duration` s to the (moving) target, so the camera
+   *  lands as the next shot starts. */
+  cut(t: number, duration: number): void {
+    this.move = { from: [this.cx, this.cy, Math.log(this.z), this.slack], start: t, duration };
+  }
+
+  /** Follows the target: along the current cut's move while it lasts, then on springs. */
+  update(target: [number, number, number], t: number, dt: number, slack = 0): void {
+    const m = this.move;
+    if (m === null) {
+      this.step(target, dt, slack);
+      return;
+    }
+    if (t - m.start >= m.duration) this.move = null; // this frame lands exactly on the target
+    const e = landing((t - m.start) / m.duration);
+    this.slack = m.from[3] + (slack - m.from[3]) * e;
+    this.vSlack = 0;
+    this.cx = m.from[0] + (target[0] - m.from[0]) * e;
+    this.cy = m.from[1] + (target[1] - m.from[1]) * e;
+    this.z = Math.exp(m.from[2] + (Math.log(target[2]) - m.from[2]) * e);
+    this.v = [0, 0, 0];
   }
 
   step(target: [number, number, number], dt: number, slack = 0): void {

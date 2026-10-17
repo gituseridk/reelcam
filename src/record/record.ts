@@ -11,6 +11,7 @@ import { launchBrowser, urlResolver } from './browser.js';
 import { Director } from './director.js';
 import { closeFrames, freshDir, writeFrames, writeTake } from './files.js';
 import { installRedaction, watchText, type Hit } from './guard.js';
+import { watchScenery } from './scenery.js';
 import { startScreencast, type Frame } from './screencast.js';
 import { serveFolder, type Served } from './serve.js';
 import { renderSprites } from './sprites.js';
@@ -59,9 +60,11 @@ async function perform(page: Page, loaded: LoadedScript, base: string, dir: stri
     await playSteps(stage, script.setup);
   }
   const guard = watchText(page, script.forbid);
+  const scenery = watchScenery(page);
   const stop = await startScreencast(cdp, { width: script.viewport.width * script.scale, height: script.viewport.height * script.scale });
   await director.shot('start', 'window', 'the whole page');
   let hits: Hit[];
+  let seen: Take['scenery'];
   let frames: Frame[];
   try {
     await playSteps(stage, script.steps);
@@ -69,13 +72,14 @@ async function perform(page: Page, loaded: LoadedScript, base: string, dir: stri
   } finally {
     await director.stop();
     hits = await guard.stop();
+    seen = await scenery.stop();
     frames = closeFrames(await stop(), now());
   }
   await writeFrames(dir, frames);
   const seconds = (frames.at(-1)?.t ?? 0) - (frames[0]?.t ?? 0);
   log.info(`recorded ${String(frames.length)} frames, ${seconds.toFixed(1)} s`);
   const vp = script.viewport;
-  return { version: 1, viewport: vp, scale: script.scale, times: frames.map((f) => f.t), pointer: actor.pointer, clicks: actor.clicks.filter((c) => c[0] >= (frames[0]?.t ?? 0)), shots: director.shots, subjects: director.subjects, hits, said: stage.captions };
+  return { version: 1, viewport: vp, scale: script.scale, times: frames.map((f) => f.t), pointer: actor.pointer, clicks: actor.clicks.filter((c) => c[0] >= (frames[0]?.t ?? 0)), shots: director.shots, subjects: director.subjects, hits, scenery: seen, said: stage.captions };
 }
 
 /** Records `loaded` into `dir` and returns the take it wrote. */

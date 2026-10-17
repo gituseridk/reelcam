@@ -5,7 +5,7 @@ import type { Rect } from '../take.js';
 import { lastAtOrBefore, type Framing } from './framing.js';
 import type { Layout, View } from './geometry.js';
 
-export const SETTLE = 0.15; // seconds after a cut before the subject must be whole (the camera moves ahead of the cut)
+export const SETTLE = 0; // every move lands exactly at its cut, so a shot is checked from its first frame
 export const GRACE = 0.6; // seconds after the subject itself changed size
 export const MIN_HOLD = 1.2; // a shot shorter than this is a flicker, not a shot
 
@@ -44,7 +44,7 @@ function holds(framing: Framing, end: number): string[] {
 }
 
 /** True while the camera is already leaving shot i for the next one (it moves `lead` s ahead). */
-function leaving(framing: Framing, lay: Layout, i: number, t: number): boolean {
+export function leaving(framing: Framing, lay: Layout, i: number, t: number): boolean {
   const next = framing.starts[i + 1];
   return next !== undefined && t > next - lay.preset.lead;
 }

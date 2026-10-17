@@ -20,6 +20,11 @@ describe('wide shots', () => {
     expect(wideZoom(new Layout(studio, { width: 390, height: 844 }))).toBe(1);
   });
 
+  it('do not pull back when nothing lies under the caption band', () => {
+    const f = new Framing(take([shot(0, rect(0, 0, 1440, 810), { window: true })]), lay, [{ start: 1, end: 3, height: 200 }]);
+    expect(f.target(2)[2]).toBeGreaterThan(1);
+  });
+
   it('breathe: a slow push-in from the cut, then hold', () => {
     const f = new Framing(take([shot(0, rect(0, 0, 1440, 810), { window: true })]), lay);
     expect(f.breath(0)).toBe(1);
@@ -29,7 +34,9 @@ describe('wide shots', () => {
   });
 
   it('pull back so the whole page sits above a caption band', () => {
-    const f = new Framing(take([shot(0, rect(0, 0, 1440, 810), { window: true })]), lay, [{ start: 1, end: 3, height: 200 }]);
+    const footer = { kind: 'text' as const, label: 'footer', rect: rect(600, 780, 200, 20) }; // under the band
+    const t = take([shot(0, rect(0, 0, 1440, 810), { window: true })], { scenery: [[0, [footer]]] });
+    const f = new Framing(t, lay, [{ start: 1, end: 3, height: 200 }]);
     const [, cy, z] = f.target(2);
     expect(z).toBeLessThan(1);
     const view = cameraView(960, cy, z, 1920, 1080);

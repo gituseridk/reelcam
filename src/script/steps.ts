@@ -8,7 +8,7 @@ const ms = z.number().int().min(0).max(60_000);
 export type Step =
   | { kind: 'visit'; url: string }
   | { kind: 'click'; at: Point; on: string | undefined }
-  | { kind: 'hover'; on: string }
+  | { kind: 'hover'; at: Point; on: string | undefined }
   | { kind: 'drag'; from: Point; to: Point; on: string | undefined; ms: number }
   | { kind: 'type'; into: string | undefined; text: string; delay: number }
   | { kind: 'press'; key: string }
@@ -42,7 +42,9 @@ export const STEP_SCHEMAS = {
   click: z
     .union([selector, z.strictObject({ at: point, on: selector.optional() })])
     .transform((v): Step => (typeof v === 'string' ? { kind: 'click', at: v, on: undefined } : { kind: 'click', at: v.at, on: v.on })),
-  hover: selector.transform((on): Step => ({ kind: 'hover', on })),
+  hover: z
+    .union([selector, z.strictObject({ at: point, on: selector.optional() })])
+    .transform((v): Step => (typeof v === 'string' ? { kind: 'hover', at: v, on: undefined } : { kind: 'hover', at: v.at, on: v.on })),
   drag: z
     .strictObject({ from: point, to: point, on: selector.optional(), ms: z.number().int().min(100).max(10_000).default(700) })
     .transform((v): Step => ({ kind: 'drag', from: v.from, to: v.to, on: v.on, ms: v.ms })),

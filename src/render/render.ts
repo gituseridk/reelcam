@@ -10,6 +10,7 @@ import { checkFraming, type ViewAt } from './check.js';
 import { Compositor } from './compose.js';
 import { gifArgs, runFfmpeg, Encoder } from './encode.js';
 import { Framing } from './framing.js';
+import { neighbourCuts } from './neighbours.js';
 import { Camera, Layout } from './geometry.js';
 import { bandOf } from './overlays.js';
 import { capture, planStills, writeSheet, type Still } from './sheet.js';
@@ -18,6 +19,8 @@ export interface RenderOptions {
   output: string;
   gif: boolean;
   sheet: boolean;
+  /** Fail the video when a neighbour is cut (default on; scripts can set `checks: { neighbours: false }`). */
+  neighbours: boolean;
 }
 
 export interface RenderResult {
@@ -47,10 +50,14 @@ async function encodeFrames(take: Take, dir: string, preset: Preset, output: str
   const encoder = new Encoder(preset, output);
   const dt = 1 / preset.fps;
   const views: ViewAt[] = [];
+  let shot = Math.max(0, framing.index(t0 + preset.lead));
   for (let k = 0; k < Math.floor((t1 - t0) * preset.fps); k++) {
     const t = t0 + k * dt;
     const ahead = t + preset.lead;
-    cam.step(framing.aim(t, cam.cx, cam.cy), dt, framing.subject(ahead) === null ? 0 : framing.reserve(Math.max(0, framing.index(ahead))));
+    const next = Math.max(0, framing.index(ahead));
+    if (next !== shot) cam.cut(t, preset.lead);
+    shot = next;
+    cam.update(framing.aim(t, cam.cx, cam.cy), t, dt, framing.subject(ahead) === null ? 0 : framing.reserve(next));
     views.push({ t, ...(await comp.draw(t, cam, clickAge(take.clicks, t))) });
     capture(stills, comp.out, t, dt);
     await encoder.write(comp.out.data());
@@ -67,6 +74,7 @@ export async function renderTake(take: Take, dir: string, preset: Preset, option
   log.info(`rendering ${path.relative(process.cwd(), options.output) || options.output} (${preset.name}, ${String(preset.width)}x${String(preset.height)})`);
   const { views, framing, lay } = await encodeFrames(take, dir, preset, options.output, stills);
   const problems = checkFraming(framing, lay, views, take.clicks, [t0, t1]);
+  if (options.neighbours) problems.push(...neighbourCuts(framing, lay, views, t0));
   for (const h of take.hits) problems.push(`t=${(h.t - t0).toFixed(2)} s: forbidden text /${h.pattern}/ on screen: "${h.text}"`);
   const base = options.output.replace(/\.mp4$/i, '');
   const sheet = options.sheet ? `${base}.sheet.png` : undefined;

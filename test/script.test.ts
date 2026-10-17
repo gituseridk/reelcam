@@ -133,6 +133,16 @@ describe('canvas steps and setup', () => {
     expect(() => validate({ ...base, steps: [step] }, 't')).toThrow(message);
   });
 
+  it('parses hover at a point and the neighbour check switch', () => {
+    const s = validate({ ...base, checks: { neighbours: false }, steps: [{ hover: { at: [0.2, 0.3] } }, { hover: '#menu' }] }, 't');
+    expect(s.checks.neighbours).toBe(false);
+    expect(s.steps).toEqual([
+      { kind: 'hover', at: [0.2, 0.3], on: undefined },
+      { kind: 'hover', at: '#menu', on: undefined },
+    ]);
+    expect(validate({ ...base, steps: ['wide'] }, 't').checks.neighbours).toBe(true);
+  });
+
   it('plays setup steps off camera, and keeps camera steps out of setup', () => {
     expect(validate({ ...base, setup: [{ click: '#cookies' }], steps: ['wide'] }, 't').setup).toHaveLength(1);
     expect(() => validate({ ...base, setup: [{ caption: 'x' }], steps: ['wide'] }, 't')).toThrow(/setup steps are not filmed/);

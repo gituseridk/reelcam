@@ -90,6 +90,17 @@ describe('render', () => {
     expect(take.shots.map((s) => s.name)).toEqual(['steps[0] focus area']);
   });
 
+});
+
+describe('render failures', () => {
+  it('fails a frame that shows a neighbour in part (below the fold), unless the script opts out', async () => {
+    const body = 'steps:\n  - wait: 1400\n';
+    const cut = await render(await script('fold', body, '{ width: 1280, height: 330 }'), { output: path.join(dir, 'fold.mp4'), sheet: false });
+    expect(cut.problems.join('\n')).toMatch(/is cut at the bottom edge/);
+    const off = await render(await script('fold-off', `checks: { neighbours: false }\n${body}`, '{ width: 1280, height: 330 }'), { output: path.join(dir, 'fold-off.mp4'), sheet: false });
+    expect(off.problems).toEqual([]);
+  });
+
   it('names the failing step and gives a hint when a selector never appears', async () => {
     const file = await script('missing', 'steps:\n  - wait: 100\n  - click: "#does-not-exist"\n');
     await expect(render(file, { output: path.join(dir, 'missing.mp4') })).rejects.toThrow(/steps\[1\] click/);

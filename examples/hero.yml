@@ -6,13 +6,10 @@ steps:
   - click: "#search"
   - focus: { on: "#palette", why: "the typing happens inside the palette" }
   - type: { text: "ship 2.0", delay: 75 }
-  - wait: 450
+  - wait: 700
   - press: Enter
-  - focus: { on: "#release", why: "the checks tick, the ring fills, it goes live" }
-  - wait: 2600
-  - wide: "the changelog is below the fold"
-  - scroll: { to: "#changelog", ms: 1200 }
-  - wait: 250
+  - wide: "the checks tick, the ring fills, it goes live"
+  - wait: 3300
   - focus: { on: "#changelog", why: "the payoff: 2.0 lands in the changelog" }
-  - caption: Recorded from 17 lines of YAML
-  - wait: 1900
+  - caption: Recorded from 14 lines of YAML
+  - wait: 2300

@@ -1,9 +1,12 @@
 /** Framing: a shot names a SUBJECT (a DOM box); the camera frames the whole subject with air on
  *  every side, never the cursor. While a shot lasts the frame only grows, so a growing subject is
  *  never cropped. */
-import type { Rect, Shot, Take } from '../take.js';
+import type { Item, Rect, Shot, Take } from '../take.js';
 import { ease } from '../record/motion.js';
-import { wideZoom, type Layout } from './geometry.js';
+import { CLEAR, canvasRect, compose, countCuts, pieces, type Choice } from './composer.js';
+import { cameraView, wideZoom, type Layout } from './geometry.js';
+import { SceneIndex } from './scene-index.js';
+import { lastAtOrBefore } from './search.js';
 
 export function union(a: Rect, b: Rect): Rect {
   const x = Math.min(a.x, b.x);
@@ -11,17 +14,7 @@ export function union(a: Rect, b: Rect): Rect {
   return { x, y, width: Math.max(a.x + a.width, b.x + b.width) - x, height: Math.max(a.y + a.height, b.y + b.height) - y };
 }
 
-/** Index of the last entry whose time is <= t, or -1. */
-export function lastAtOrBefore(times: readonly number[], t: number): number {
-  let lo = 0;
-  let hi = times.length;
-  while (lo < hi) {
-    const mid = (lo + hi) >> 1;
-    if ((times[mid] ?? Infinity) <= t) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo - 1;
-}
+export { lastAtOrBefore } from './search.js';
 
 /** A text overlay's time span and the canvas height it needs at the bottom of the frame. */
 export interface Band {
@@ -37,13 +30,16 @@ export class Framing {
   readonly samples: [number, Rect][][];
   /** Per shot: the running union of the boxes (the frame never shrinks back). */
   private readonly grown: [number, Rect][][];
+  private readonly scenery: SceneIndex;
+  private readonly memo = new Map<string, Choice>();
 
   constructor(
-    take: Pick<Take, 'shots' | 'subjects'>,
+    readonly take: Pick<Take, 'shots' | 'subjects' | 'scenery'>,
     private readonly lay: Layout,
     readonly bands: readonly Band[] = [],
   ) {
     this.shots = take.shots;
+    this.scenery = new SceneIndex(take.scenery, lay.preset.lead);
     this.starts = take.shots.map((s) => s.t);
     this.samples = take.shots.map((s): [number, Rect][] => [[s.t, s.rect]]);
     for (const [t, i, r] of take.subjects) this.samples[i]?.push([t, r]);
@@ -77,6 +73,11 @@ export class Framing {
     return acc[Math.max(0, lastAtOrBefore(acc.map((a) => a[0]), t))]?.[1] ?? shot.rect;
   }
 
+  /** The pieces on the page at t (the latest scenery sample), with the sample's index. */
+  scene(t: number): [number, readonly Item[]] {
+    return this.scenery.at(t);
+  }
+
   /** The slow push-in factor at t: 1 at the cut, up to 1 + breathe after breatheSeconds. */
   breath(t: number): number {
     const { preset } = this.lay;
@@ -96,7 +97,7 @@ export class Framing {
     const { preset, page } = this.lay;
     const full = wideZoom(this.lay);
     const fits = (preset.height - reserve - preset.margin) / page.height;
-    if (reserve === 0 || fits >= full) return [preset.width / 2, preset.height / 2, full * this.breath(t)];
+    if (reserve === 0 || fits >= full || this.bandIsClear(t, reserve, full)) return [preset.width / 2, preset.height / 2, full * (this.wideBreathes(t) ? this.breath(t) : 1)];
     const screenY = (preset.margin + preset.height - reserve) / 2; // where the page centre should land
     const pcy = page.y + page.height / 2;
     return [preset.width / 2, pcy - (screenY - preset.height / 2) / fits, fits];
@@ -115,8 +116,46 @@ export class Framing {
     const fit = Math.min((preset.fill * preset.width) / Math.max(1, r.width * s), (preset.fill * (preset.height - reserve)) / Math.max(1, r.height * s));
     const z = Math.min(fit, shot.zoom ?? preset.maxZoom);
     if (z < preset.minGain * wideZoom(this.lay)) return rest;
-    const [cx, cy] = this.lay.toCanvas(r.x + r.width / 2, r.y + r.height / 2);
-    return [cx, cy + reserve / (2 * z), z * this.breath(t)];
+    const c = this.choose(i, r, z, reserve);
+    return [c.cx, c.cy, c.z * (c.breathe ? this.breath(t) : 1)];
+  }
+
+  /** The composed frame for shot i at t (memoised per subject size and scenery sample). */
+  private choose(i: number, r: Rect, z0: number, reserve: number): Choice {
+    const key = `${String(i)}|${String(reserve)}|${JSON.stringify(r)}`;
+    const hit = this.memo.get(key);
+    if (hit !== undefined) return hit;
+    const { preset } = this.lay;
+    const subject = canvasRect(this.lay, r);
+    const c0: [number, number] = [subject.x + subject.width / 2, subject.y + subject.height / 2 + reserve / (2 * z0)];
+    const zMax = Math.min(this.shots[i]?.zoom ?? preset.maxZoom, z0 * 1.25);
+    const want = { subject, z0, c0, zMin: preset.minGain * wideZoom(this.lay), zMax, reserve };
+    const choice = compose(this.lay, want, pieces(this.lay, this.scenery.forShot(i, this.starts), subject));
+    this.memo.set(key, choice);
+    return choice;
+  }
+
+  /** True when nothing on the page lies under the caption band of a wide shot: no need to pull back. */
+  private bandIsClear(t: number, reserve: number, z: number): boolean {
+    const { width: W, height: H } = this.lay.preset;
+    const view = cameraView(W / 2, H / 2, z * (1 + this.lay.preset.breathe), W, H);
+    const band = { x: view.x, y: view.y + view.height - reserve / z, width: view.width, height: reserve / z };
+    return pieces(this.lay, this.scene(t)[1], null).every((p) => p.y >= band.y + band.height || p.y + p.height <= band.y - CLEAR);
+  }
+
+  /** A wide shot breathes only when the push-in cuts no more pieces than the still frame. */
+  private wideBreathes(t: number): boolean {
+    const [k, items] = this.scene(t);
+    const key = `wide|${String(k)}`;
+    const hit = this.memo.get(key);
+    if (hit !== undefined) return hit.breathe;
+    const { width: W, height: H, breathe } = this.lay.preset;
+    const full = wideZoom(this.lay);
+    const list = pieces(this.lay, items, null);
+    const still = countCuts(list, cameraView(W / 2, H / 2, full, W, H), this.lay.page, CLEAR);
+    const pushed = countCuts(list, cameraView(W / 2, H / 2, full * (1 + breathe), W, H), this.lay.page, CLEAR);
+    this.memo.set(key, { cx: 0, cy: 0, z: full, cuts: still, breathe: pushed <= still, cost: 0 });
+    return pushed <= still;
   }
 
   /** Where the camera heads at t, seen from where it is now (cx, cy): the target of the shot that

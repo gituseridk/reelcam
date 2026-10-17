@@ -29,10 +29,12 @@ describe('Framing.target', () => {
   });
 
   it('zooms on a small subject with air on every side, capped at maxZoom', () => {
-    const f = new Framing(take([shot(0, rect(100, 100, 400, 100))]), lay);
+    const f = new Framing(take([shot(0, rect(500, 350, 400, 100))]), lay);
     const [cx, cy, z] = f.target(1);
+    const [ex, ey] = lay.toCanvas(700, 400);
     expect(z).toBeCloseTo(2.2);
-    expect([cx, cy]).toEqual(lay.toCanvas(300, 150));
+    expect(cx).toBeCloseTo(ex);
+    expect(cy).toBeCloseTo(ey);
   });
 
   it('fits a wide subject to 88% of the frame width', () => {

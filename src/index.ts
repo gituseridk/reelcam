@@ -38,7 +38,7 @@ export async function render(file: string, options: RenderOptions = {}): Promise
   const dir = options.keep === undefined ? await mkdtemp(path.join(os.tmpdir(), `${NAME}-`)) : path.resolve(options.keep);
   try {
     const take = await record(loaded, preset, dir);
-    return await renderTake(take, dir, preset, { output: loaded.output, gif: options.gif ?? loaded.script.gif, sheet: options.sheet ?? true });
+    return await renderTake(take, dir, preset, { output: loaded.output, gif: options.gif ?? loaded.script.gif, sheet: options.sheet ?? true, neighbours: loaded.script.checks.neighbours });
   } finally {
     if (options.keep === undefined) {
       await rm(dir, { recursive: true, force: true }).catch((error: unknown) => {

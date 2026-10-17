@@ -5,6 +5,7 @@ import { z } from 'zod';
 
 const rect = z.object({ x: z.number(), y: z.number(), width: z.number().min(0), height: z.number().min(0) });
 const sample = z.tuple([z.number(), z.number(), z.number()]);
+const item = z.object({ kind: z.enum(['text', 'box']), label: z.string(), rect });
 
 export const takeSchema = z.object({
   version: z.literal(1),
@@ -20,11 +21,14 @@ export const takeSchema = z.object({
   captions: z.array(z.object({ t: z.number(), ms: z.number(), sprite: z.string() })),
   title: z.object({ sprite: z.string(), ms: z.number() }).optional(),
   hits: z.array(z.object({ t: z.number(), text: z.string(), pattern: z.string() })),
+  /** What else is on the page at each moment (see record/scenery.ts). */
+  scenery: z.array(z.tuple([z.number(), z.array(item)])).default([]),
 });
 
 export type Take = z.infer<typeof takeSchema>;
 export type Rect = z.infer<typeof rect>;
 export type Shot = Take['shots'][number];
+export type Item = z.infer<typeof item>;
 
 /** Wall-clock seconds with sub-millisecond precision: the clock every take uses. */
 export function now(): number {

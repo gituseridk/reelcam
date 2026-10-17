@@ -54,7 +54,8 @@ async function play(stage: Stage, step: Step, label: string): Promise<void> {
     case 'drag':
       return actor.drag(await resolvePoint(page, step.from, step.on), await resolvePoint(page, step.to, step.on), step.ms);
     case 'hover':
-      return actor.moveTo(await visible(stage, step.on));
+      if (typeof step.at === 'string') return actor.moveTo(await visible(stage, step.at));
+      return actor.hoverAt(await resolvePoint(page, step.at, step.on));
     case 'type':
       if (step.into !== undefined) await actor.click(await visible(stage, step.into));
       return actor.type(step.text, step.delay);

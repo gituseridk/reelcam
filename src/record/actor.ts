@@ -80,16 +80,23 @@ export class Actor {
 
   /** Presses at `from`, moves to `to` in `ms` along an eased path, and releases (draw, drag and drop). */
   async drag(from: [number, number], to: [number, number], ms: number): Promise<void> {
-    await this.glide(from, glideMs(Math.hypot(from[0] - this.x, from[1] - this.y)));
-    await this.wait(150);
+    const far = Math.hypot(from[0] - this.x, from[1] - this.y);
+    if (far > 2) {
+      await this.glide(from, glideMs(far));
+      await this.wait(70);
+    }
     this.clicks.push([now(), this.x, this.y]);
     await this.page.mouse.down();
-    await this.wait(80);
+    await this.wait(40);
     await this.glide(to, ms);
-    await this.wait(80);
+    await this.wait(40);
     await this.page.mouse.up();
-    await this.wait(120);
-    await this.glide([this.x + DRIFT[0], this.y + DRIFT[1]], 300);
+    await this.wait(60); // the pen rests at the end of the stroke, clear of what it drew
+  }
+
+  /** Moves the pointer to a point, like a person. */
+  async hoverAt(to: [number, number]): Promise<void> {
+    await this.glide(to, glideMs(Math.hypot(to[0] - this.x, to[1] - this.y)));
   }
 
   /** Types like a person: one key at a time, `delay` ms apart with a little seeded jitter. */
@@ -103,7 +110,7 @@ export class Actor {
 
   async press(key: string): Promise<void> {
     await this.page.keyboard.press(key);
-    await this.wait(300);
+    await this.wait(150);
   }
 
   /** A wheel scroll over the pointer, `dy` px in `ms`, eased. */
