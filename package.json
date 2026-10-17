@@ -8,7 +8,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "skills", "README.md", "LICENSE"],
+  "files": ["dist", "skills", "examples", "action", "action.yml", "README.md", "LICENSE"],
   "engines": { "node": ">=22.12" },
   "keywords": ["demo", "video", "screencast", "playwright", "mp4", "camera", "agent", "github-action"],
   "scripts": {

@@ -20,6 +20,8 @@ const OPTIONS = {
   'allow-remote': { type: 'boolean' },
   keep: { type: 'string' },
   force: { type: 'boolean' },
+  demo: { type: 'boolean' },
+  'with-deps': { type: 'boolean' },
   verbose: { type: 'boolean', short: 'v' },
   quiet: { type: 'boolean', short: 'q' },
   help: { type: 'boolean', short: 'h' },

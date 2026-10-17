@@ -6,6 +6,7 @@ import { render } from './index.js';
 import { log } from './log.js';
 import { PRESETS } from './presets/index.js';
 import { loadScript } from './script/load.js';
+import { installBrowser, writeDemo } from './setup.js';
 import { STARTER } from './starter.js';
 
 export const EXIT = { ok: 0, checkFailed: 1, usage: 2, error: 3 } as const;
@@ -19,6 +20,8 @@ export interface Values {
   'allow-remote'?: boolean;
   keep?: string;
   force?: boolean;
+  demo?: boolean;
+  'with-deps'?: boolean;
 }
 
 type Command = (args: string[], values: Values, print: (text: string) => void) => Promise<number>;
@@ -29,6 +32,8 @@ Usage:
   showreel render <script.yml> [options]   record the script and write an MP4
   showreel check <script.yml>              validate a script without recording
   showreel init [file]                     write a starter script (default: showreel.yml)
+  showreel init --demo [dir]               copy a demo app and a script that records it (default: showreel-demo)
+  showreel setup [--with-deps]             install Chromium (--with-deps: also system libraries, Linux)
   showreel presets                         list the built-in looks
 
 Options for render:
@@ -75,6 +80,10 @@ const checkCommand: Command = async (args, _values, print) => {
 };
 
 const initCommand: Command = async (args, values, print) => {
+  if (values.demo === true) {
+    print(await writeDemo(args[0] ?? 'showreel-demo', values.force === true));
+    return EXIT.ok;
+  }
   const file = args[0] ?? 'showreel.yml';
   const exists = await access(file).then(
     () => true,
@@ -91,4 +100,9 @@ const presetsCommand: Command = (_args, _values, print) => {
   return Promise.resolve(EXIT.ok);
 };
 
-export const commands: Partial<Record<string, Command>> = { render: renderCommand, check: checkCommand, init: initCommand, presets: presetsCommand };
+const setupCommand: Command = async (_args, values) => {
+  await installBrowser(values['with-deps'] === true);
+  return EXIT.ok;
+};
+
+export const commands: Partial<Record<string, Command>> = { render: renderCommand, check: checkCommand, init: initCommand, setup: setupCommand, presets: presetsCommand };
