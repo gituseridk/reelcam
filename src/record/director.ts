@@ -1,7 +1,8 @@
 /** The director of a take: names each camera shot and keeps measuring its subject while the shot
  *  lasts, so the renderer frames the whole subject even when it grows. Rules: README "Camera". */
 import type { Locator, Page } from 'playwright';
-import { ShowreelError } from '../errors.js';
+import { ShowreelError, describe } from '../errors.js';
+import { log } from '../log.js';
 import { now, sleep, type Rect, type Shot } from '../take.js';
 
 export type Subject = 'window' | Locator;
@@ -19,7 +20,10 @@ export class Director {
     const vp = this.page.viewportSize();
     if (vp === null) throw new ShowreelError('the page has no viewport size');
     if (subject === 'window') return { x: 0, y: 0, width: vp.width, height: vp.height };
-    const box = await subject.boundingBox({ timeout: 400 }).catch(() => null);
+    const box = await subject.boundingBox({ timeout: 400 }).catch((error: unknown) => {
+      log.debug(`subject not measurable now: ${describe(error)}`);
+      return null;
+    });
     if (box === null) return null;
     const x0 = Math.max(0, box.x);
     const y0 = Math.max(0, box.y);

@@ -1,8 +1,9 @@
 /** Privacy and content guards. `redact` blurs matching elements on every page before the first
  *  frame; `forbid` samples the visible text while recording and logs any match, which fails the take. */
 import type { BrowserContext, Page } from 'playwright';
-import { sleep } from '../take.js';
-import { now } from '../take.js';
+import { describe } from '../errors.js';
+import { log } from '../log.js';
+import { now, sleep } from '../take.js';
 
 /** The CSS that blurs every element matching one of `selectors`. */
 export function redactCss(selectors: readonly string[]): string {
@@ -54,7 +55,10 @@ export function watchText(page: Page, sources: readonly string[]): { stop: () =>
   const seen = new Set<string>();
   const loop = (async (): Promise<void> => {
     while (on) {
-      const text = await page.evaluate(() => document.body.innerText).catch(() => '');
+      const text = await page.evaluate(() => document.body.innerText).catch((error: unknown) => {
+        log.debug(`text sample skipped (page navigating?): ${describe(error)}`);
+        return '';
+      });
       for (const h of findHits(text, patterns, seen)) hits.push({ t: now(), ...h });
       await sleep(200);
     }
