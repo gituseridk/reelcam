@@ -4,6 +4,7 @@ import type { BrowserContext, Page } from 'playwright';
 import { describe } from '../errors.js';
 import { log } from '../log.js';
 import { now, sleep } from '../take.js';
+import { installStyle } from './style.js';
 
 /** The CSS that blurs every element matching one of `selectors`. */
 export function redactCss(selectors: readonly string[]): string {
@@ -11,20 +12,9 @@ export function redactCss(selectors: readonly string[]): string {
   return `${selectors.join(',\n')} { filter: blur(9px) saturate(0.4) !important; }`;
 }
 
-/** Installs the redaction style on every document the context opens. */
-export async function installRedaction(context: BrowserContext, selectors: readonly string[]): Promise<void> {
-  const css = redactCss(selectors);
-  if (css === '') return;
-  await context.addInitScript((text: string) => {
-    const add = (): void => {
-      const style = document.createElement('style');
-      style.dataset.redact = '';
-      style.textContent = text;
-      document.documentElement.append(style);
-    };
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', add, { once: true });
-    else add();
-  }, css);
+/** Installs the redaction style on every document the context opens (CSP-proof; see style.ts). */
+export async function installRedaction(context: Pick<BrowserContext, 'addInitScript'>, selectors: readonly string[]): Promise<void> {
+  await installStyle(context, redactCss(selectors));
 }
 
 export interface Hit {
