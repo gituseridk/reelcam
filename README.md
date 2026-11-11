@@ -62,9 +62,9 @@ locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
 
 - **Every move has a reason.** A shot frames a whole UI element, read from the DOM while it
   records. The camera cuts between shots on a critically damped spring, and it never chases the cursor.
-- **It checks itself.** The render fails (exit 1) when a frame crops its subject (from 0.15 s after its cut), a shot
-  flickers past in under 1.2 s, a click happens off camera, a caption covers the subject, or
-  forbidden text (say `lorem` or `TODO`) appears on screen.
+- **It checks itself.** The render fails (exit 1) when a frame crops its subject, a shot
+  flickers past in under 1.2 s, a click happens off camera, a caption covers the subject, another
+  element is cut at the frame edge, or forbidden text (say `lorem` or `TODO`) appears on screen.
 - **It is repeatable.** A script is code: review it in a PR, re-record it after every UI change,
   and render it in CI. The pointer's jitter is seeded.
 - **It suits agents.** The [agent skill](skills/reelcam/SKILL.md) teaches a coding agent to film the
@@ -124,12 +124,19 @@ problem with its path, such as `steps[3].type.text: expected string`.
 4. Lists, feeds, scrolling and search are shown wide: both the source and the result must be seen.
    A wide shot fills the frame when that crops only the stage margin.
 5. While a shot holds, the camera **breathes**: a 3% push-in over 5 s.
-6. Captions get room: for the whole shot the camera keeps the caption band clear of the subject
-   (a wide shot pulls back, and a view may pass onto the stage below the page).
+6. Captions get room. A shot that frames an element keeps the caption band clear of it for the
+   whole shot (the view may pass onto the stage below the page). A wide shot with something under
+   the band pulls back a move before the caption appears and stays back until it has faded out; when
+   less than a move plus 1.2 s of the shot is left after that, it stays back to the end of the shot,
+   so a video never ends on an extra move. The check fails any frame where a visible caption covers
+   the subject, or any piece of the page in a wide shot.
 7. Every shot is held at least 1.2 s.
 8. One idea per video: 6 to 15 s. Start on the view and end right after the payoff.
 9. No partly visible neighbours: a shot fails its check when another element, or a strip of the
-   stage, is cut at the frame edge. Opt out with `checks: { neighbours: false }`.
+   stage, is cut at the frame edge. An element the app itself clips (inside a scroller or an
+   `overflow: hidden` box) counts only as far as it shows, and chrome that spans the page (a
+   full-height sidebar, a full-width header bar) is not a neighbour, though what is in it is.
+   Opt out with `checks: { neighbours: false }`.
 
 ## Presets
 
