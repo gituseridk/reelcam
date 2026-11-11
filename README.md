@@ -7,7 +7,7 @@ CI, or by your coding agent.
 
 [![The hero video, made by Reelcam](docs/hero.png)](docs/hero.mp4)
 
-<sub>The video above (click for the MP4) was recorded by Reelcam from these 17 lines,
+<sub>The video above (click for the MP4) was recorded by Reelcam from these 14 lines,
 [`examples/hero.yml`](examples/hero.yml). The demo app, Orbit, is in [`examples/orbit`](examples/orbit).</sub>
 
 ```yaml
@@ -18,16 +18,13 @@ steps:
   - click: "#search"
   - focus: { on: "#palette", why: "the typing happens inside the palette" }
   - type: { text: "ship 2.0", delay: 75 }
-  - wait: 450
+  - wait: 700
   - press: Enter
-  - focus: { on: "#release", why: "the checks tick, the ring fills, it goes live" }
-  - wait: 2600
-  - wide: "the changelog is below the fold"
-  - scroll: { to: "#changelog", ms: 1200 }
-  - wait: 250
+  - wide: "the checks tick, the ring fills, it goes live"
+  - wait: 3300
   - focus: { on: "#changelog", why: "the payoff: 2.0 lands in the changelog" }
-  - caption: Recorded from 17 lines of YAML
-  - wait: 1900
+  - caption: Recorded from 14 lines of YAML
+  - wait: 2300
 ```
 
 The same story as a 9:16 phone video, from [`examples/hero-vertical.yml`](examples/hero-vertical.yml):
@@ -37,7 +34,7 @@ The same story as a 9:16 phone video, from [`examples/hero-vertical.yml`](exampl
 
 | | |
 |---|---|
-| [![Excalidraw, filmed by Reelcam](docs/gallery/excalidraw.png)](docs/gallery/excalidraw.mp4) | **Excalidraw** (MIT), built and run locally. A two-step flow sketched with the keyboard tools, filmed by [a 22-line script](examples/gallery/excalidraw/excalidraw.yml) with `drag`, a `setup` step and an `area` shot. |
+| [![Excalidraw, filmed by Reelcam](docs/gallery/excalidraw.png)](docs/gallery/excalidraw.mp4) | **Excalidraw** (MIT), built and run locally. A three-step flow sketched with the keyboard tools, filmed by [a 28-line script](examples/gallery/excalidraw/excalidraw.yml) with `drag`, a `setup` step and an `area` shot. |
 
 Every video has a per-moment content audit in [docs/AUDIT.md](docs/AUDIT.md).
 
@@ -120,8 +117,8 @@ problem with its path, such as `steps[3].type.text: expected string`.
 
 1. A shot frames a **subject**, a whole element or a page area, with air on every side (it fills
    at most 88%). If the subject grows during the shot, the frame grows with it and never shrinks back.
-2. Every move **starts 0.35 s ahead of the cut**, and the zoom is capped on the way so the next
-   subject is whole from the first frame of its shot. Pulling out is quicker than pushing in.
+2. Every cut is a **0.7 s move that starts ahead of the shot and lands exactly on it**, so the
+   next subject is whole from the first frame of its shot.
 3. Zoom in only when the subject is small and every beat that follows stays inside it. A zoom
    that gains less than 12% is skipped.
 4. Lists, feeds, scrolling and search are shown wide: both the source and the result must be seen.
@@ -131,6 +128,8 @@ problem with its path, such as `steps[3].type.text: expected string`.
    (a wide shot pulls back, and a view may pass onto the stage below the page).
 7. Every shot is held at least 1.2 s.
 8. One idea per video: 6 to 15 s. Start on the view and end right after the payoff.
+9. No partly visible neighbours: a shot fails its check when another element, or a strip of the
+   stage, is cut at the frame edge. Opt out with `checks: { neighbours: false }`.
 
 ## Presets
 
