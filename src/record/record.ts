@@ -9,6 +9,7 @@ import { now, type Take } from '../take.js';
 import { Actor } from './actor.js';
 import { launchBrowser, urlResolver } from './browser.js';
 import { Director } from './director.js';
+import { installExclusion } from './exclude.js';
 import { closeFrames, freshDir, writeFrames, writeTake } from './files.js';
 import { installRedaction, watchText, type Hit } from './guard.js';
 import { watchScenery } from './scenery.js';
@@ -25,6 +26,7 @@ async function openPage(browser: Browser, loaded: LoadedScript, start: string): 
   const { script } = loaded;
   const context = await browser.newContext({ viewport: script.viewport, deviceScaleFactor: script.scale, colorScheme: script.colorScheme });
   await installRedaction(context, script.redact);
+  await installExclusion(context, script.exclude);
   const page = await context.newPage();
   page.on('pageerror', (error) => {
     log.warn(`page error: ${error.message}`);

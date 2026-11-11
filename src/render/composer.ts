@@ -1,8 +1,9 @@
-/** Composition: picks the frame for a shot so that nothing else on the page is cut by the frame
- *  edge. Around the ideal frame (subject centred, 88% fill) it tries nearby zooms and positions and
- *  keeps the closest one where every other piece is either wholly in, or wholly out, with a margin. */
+/** Composition: avoids cut neighbours and isolated strays around a focus shot. Around the ideal
+ *  frame (subject centred, 88% fill) it tries nearby zooms and positions, keeping the subject whole.
+ *  Cuts and stage slivers cost more than strays; strays cost more than distance from the ideal. */
 import type { Item, Rect } from '../take.js';
 import { cameraView, type Layout, type View } from './geometry.js';
+import { countStrays, relatedPaths } from './stray-geometry.js';
 
 /** Canvas px every piece keeps from the frame edge (also soaks up the spring's last few px). */
 export const CLEAR = 10;
@@ -14,7 +15,7 @@ export interface Choice {
   /** The slow push-in is allowed only when it cuts nothing new. */
   breathe: boolean;
   cuts: number;
-  /** How far this frame is from the ideal (cuts dominate, then stage showing, then distance). */
+  /** How far this frame is from the ideal, including cuts, stage showing and isolated strays. */
   cost: number;
 }
 
@@ -42,6 +43,15 @@ export function isCut(piece: View, frame: View, page: View, pad: number): boolea
 export function pieces(lay: Layout, items: readonly Item[], subject: View | null): View[] {
   const all = items.map((it) => canvasRect(lay, it.rect));
   return subject === null ? all : all.filter((p) => !inside(subject, p, -1));
+}
+
+/** Relatives cannot be strays, but overflowing children still occupy the gap to other controls.
+ *  Ancestor backgrounds do not fill otherwise empty space around the subject. */
+export function strayScene(lay: Layout, items: readonly Item[], domPath?: readonly number[]): { candidates: { item: Item; box: View }[]; scenery: View[] } {
+  const all = items.map((item) => ({ item, box: canvasRect(lay, item.rect) }));
+  const candidates = all.filter(({ item }) => !relatedPaths(item.domPath, domPath));
+  const scenery = all.filter(({ item }) => !relatedPaths(item.domPath, domPath) || (item.domPath?.length ?? 0) > (domPath?.length ?? 0)).map((p) => p.box);
+  return { candidates, scenery };
 }
 
 export function countCuts(list: readonly View[], frame: View, page: View, pad: number): number {
@@ -87,7 +97,7 @@ function positions(lo: number, hi: number, ideal: number): number[] {
   return out;
 }
 
-function tryZoom(lay: Layout, want: Want, list: readonly View[], z: number, best: Choice | null): Choice | null {
+function tryZoom(lay: Layout, want: Want, list: readonly View[], strays: readonly View[], scenery: readonly View[], z: number, best: Choice | null): Choice | null {
   const { width: W, height: H } = lay.preset;
   const s = want.subject;
   const [w, h] = [W / z, H / z];
@@ -102,10 +112,11 @@ function tryZoom(lay: Layout, want: Want, list: readonly View[], z: number, best
       const frame = cameraView(cx, cy, z, W, H, want.reserve);
       if (!inside(s, frame, 0) || s.y + s.height > frame.y + frame.height - want.reserve / z) continue;
       const cuts = countCuts(list, frame, lay.page, CLEAR);
+      const strayCost = Math.min(4, countStrays(strays, s, frame, lay.page, scenery)) * 100;
       const fill = Math.max(s.width / frame.width, s.height / frame.height);
       const cramped = Math.max(0, fill - 0.93) * 100; // a subject filling the frame edge to edge feels cramped
       const sliver = stageSliver(frame, lay.page, W) === null ? 0 : 500;
-      const cost = cuts * 1000 + sliver + cramped + offPage(frame, lay.page) * 60 + Math.abs(Math.log(z / want.z0)) * 3 + Math.abs(cx - want.c0[0]) / W + Math.abs(cy - want.c0[1]) / H;
+      const cost = cuts * 1000 + sliver + strayCost + cramped + offPage(frame, lay.page) * 60 + Math.abs(Math.log(z / want.z0)) * 3 + Math.abs(cx - want.c0[0]) / W + Math.abs(cy - want.c0[1]) / H;
       if (cost < (out?.cost ?? Infinity)) out = { cx, cy, z, cuts, breathe: false, cost };
     }
   }
@@ -114,7 +125,7 @@ function tryZoom(lay: Layout, want: Want, list: readonly View[], z: number, best
 
 /** Slides a frame that shows a thin strip of stage past a page edge back onto the page, when that
  *  keeps the subject whole and cuts nothing new (a 2 px strip of stage reads as a glitch). */
-function snap(lay: Layout, want: Want, list: readonly View[], c: Choice): Choice {
+function snap(lay: Layout, want: Want, list: readonly View[], strays: readonly View[], scenery: readonly View[], c: Choice): Choice {
   const { width: W, height: H } = lay.preset;
   const v = cameraView(c.cx, c.cy, c.z, W, H, want.reserve);
   const p = lay.page;
@@ -123,21 +134,25 @@ function snap(lay: Layout, want: Want, list: readonly View[], c: Choice): Choice
   if ((dx === 0 && dy === 0) || Math.abs(dy) > v.height * 0.06 || Math.abs(dx) > v.width * 0.06) return c;
   const moved = { ...c, cx: c.cx + dx, cy: c.cy + dy };
   const frame = cameraView(moved.cx, moved.cy, c.z, W, H, want.reserve);
-  const ok = inside(want.subject, frame, 0) && countCuts(list, frame, p, CLEAR) <= c.cuts;
+  const ok = inside(want.subject, frame, 0) && want.subject.y + want.subject.height <= frame.y + frame.height - want.reserve / c.z &&
+    countCuts(list, frame, p, CLEAR) <= c.cuts && countStrays(strays, want.subject, frame, p, scenery) <= countStrays(strays, want.subject, v, p, scenery);
   return ok ? moved : c;
 }
 
 /** The best frame for `want` among nearby zooms and positions. */
-export function compose(lay: Layout, want: Want, list: readonly View[]): Choice {
+export function compose(lay: Layout, want: Want, list: readonly View[], strays: readonly View[] = list, scenery: readonly View[] = list): Choice {
   let best: Choice | null = null;
   for (let k = -14; k <= 8; k++) {
     const z = want.z0 * (1 + 0.035 * k);
     if (z < want.zMin || z > want.zMax) continue;
-    best = tryZoom(lay, want, list, z, best);
+    best = tryZoom(lay, want, list, strays, scenery, z, best);
   }
-  const chosen = snap(lay, want, list, best ?? { cx: want.c0[0], cy: want.c0[1], z: want.z0, cuts: 0, breathe: false, cost: 0 });
+  const chosen = snap(lay, want, list, strays, scenery, best ?? { cx: want.c0[0], cy: want.c0[1], z: want.z0, cuts: 0, breathe: false, cost: 0 });
+  const still = cameraView(chosen.cx, chosen.cy, chosen.z, lay.preset.width, lay.preset.height, want.reserve);
   const pushed = cameraView(chosen.cx, chosen.cy, chosen.z * (1 + lay.preset.breathe), lay.preset.width, lay.preset.height, want.reserve);
-  const breathe = countCuts(list, pushed, lay.page, CLEAR) <= chosen.cuts && inside(want.subject, pushed, 0);
+  const breathe = countCuts(list, pushed, lay.page, CLEAR) <= chosen.cuts && inside(want.subject, pushed, 0) &&
+    want.subject.y + want.subject.height <= pushed.y + pushed.height - want.reserve / (chosen.z * (1 + lay.preset.breathe)) &&
+    countStrays(strays, want.subject, pushed, lay.page, scenery) <= countStrays(strays, want.subject, still, lay.page, scenery);
   return { ...chosen, breathe };
 }
 

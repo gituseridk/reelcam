@@ -3,7 +3,7 @@
  *  never cropped. */
 import type { Item, Rect, Shot, Take } from '../take.js';
 import { ease } from '../record/motion.js';
-import { CLEAR, canvasRect, compose, countCuts, pieces, type Choice } from './composer.js';
+import { CLEAR, canvasRect, compose, countCuts, pieces, strayScene, type Choice } from './composer.js';
 import { cameraView, wideZoom, type Layout } from './geometry.js';
 import { SceneIndex } from './scene-index.js';
 import { lastAtOrBefore } from './search.js';
@@ -149,7 +149,9 @@ export class Framing {
     const c0: [number, number] = [subject.x + subject.width / 2, subject.y + subject.height / 2 + reserve / (2 * z0)];
     const zMax = Math.min(this.shots[i]?.zoom ?? preset.maxZoom, z0 * 1.25);
     const want = { subject, z0, c0, zMin: preset.minGain * wideZoom(this.lay), zMax, reserve };
-    const choice = compose(this.lay, want, pieces(this.lay, this.scenery.forShot(i, this.starts), subject));
+    const items = this.scenery.forShot(i, this.starts);
+    const { candidates, scenery } = strayScene(this.lay, items, this.shots[i]?.domPath);
+    const choice = compose(this.lay, want, pieces(this.lay, items, subject), candidates.map((p) => p.box), scenery);
     this.memo.set(key, choice);
     return choice;
   }

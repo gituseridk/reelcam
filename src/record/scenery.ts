@@ -1,6 +1,5 @@
-/** The scenery of a take: every visible piece of the page a viewer could see cut by the frame edge
- *  (text runs, cards, controls, images; see collect.ts), sampled every 250 ms. The renderer frames
- *  shots so no piece is cut, and the check fails a video where one is. */
+/** Visible page pieces (text runs, cards, controls, images; see collect.ts), sampled every 250 ms.
+ *  The renderer uses them to avoid cut neighbours and isolated strays in focus shots. */
 import type { Page } from 'playwright';
 import { describe } from '../errors.js';
 import { log } from '../log.js';
@@ -11,7 +10,7 @@ import { COLLECT, VISIT_BUDGET, parseCollected } from './collect.js';
 async function sample(page: Page, warned: { truncated: boolean }): Promise<Item[] | null> {
   try {
     const { items, truncated } = parseCollected(await page.evaluate(COLLECT));
-    if (truncated && !warned.truncated) log.warn(`the page has more than ${String(VISIT_BUDGET)} visible elements; the neighbour check sees only the first ones`);
+    if (truncated && !warned.truncated) log.warn(`the page has more than ${String(VISIT_BUDGET)} visible elements; the neighbour and stray checks see only the first ones`);
     warned.truncated ||= truncated;
     return items;
   } catch (error) {

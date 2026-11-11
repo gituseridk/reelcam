@@ -4,6 +4,7 @@ import type { Locator, Page } from 'playwright';
 import { UserError, describe } from '../errors.js';
 import { log } from '../log.js';
 import { now, sleep, type Rect, type Shot } from '../take.js';
+import { elementPath } from './nodes.js';
 
 /** What a shot frames: the whole page, an element (re-measured while the shot lasts), or a fixed
  *  region given as fractions [left, top, right, bottom] of the page. */
@@ -44,9 +45,10 @@ export class Director {
     await this.stop();
     const rect = await this.rect(subject, 5000); // a busy page may take a moment to answer
     if (rect === null) throw new UserError(`shot "${name}": the subject is not visible on the page`, 'Scroll it into view first, or wait for it with "waitFor".');
+    const domPath = subject === 'window' || 'area' in subject ? undefined : await subject.evaluate(elementPath);
     this.dropInstantShot();
     const index = this.shots.length;
-    this.shots.push({ t: now(), name, why, window: subject === 'window', rect, ...(zoom === undefined ? {} : { zoom }) });
+    this.shots.push({ t: now(), name, why, window: subject === 'window', rect, ...(zoom === undefined ? {} : { zoom }), ...(domPath === undefined ? {} : { domPath }) });
     if (subject === 'window' || 'area' in subject) return;
     const token = {};
     this.token = token;

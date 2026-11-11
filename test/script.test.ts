@@ -13,6 +13,8 @@ describe('validate', () => {
     expect(s.viewport).toEqual({ width: 1440, height: 810 });
     expect(s.scale).toBe(2);
     expect(s.preset).toBe('studio');
+    expect(s.checks).toEqual({ neighbours: true, strays: true });
+    expect(s.exclude).toEqual([]);
     expect(s.steps).toEqual([{ kind: 'wide', why: '' }]);
   });
 
@@ -53,6 +55,14 @@ describe('validate', () => {
     expect(() => validate({ ...base, steps: [{ visit: 'https://example.com/x' }] }, 't')).toThrow(/non-local URL/);
     expect(validate({ url: 'https://example.com', allowRemote: true, steps: ['wide'] }, 't').allowRemote).toBe(true);
     expect(validate({ ...base, steps: [{ visit: '/settings' }] }, 't').steps).toHaveLength(1);
+  });
+});
+
+describe('excluded selectors', () => {
+  it('accepts selectors to exclude and rejects malformed lists', () => {
+    expect(validate({ ...base, exclude: ['#new-chat', '.sidebar button'], steps: ['wide'] }, 't').exclude).toEqual(['#new-chat', '.sidebar button']);
+    expect(() => validate({ ...base, exclude: '#new-chat', steps: ['wide'] }, 't')).toThrow('exclude');
+    expect(() => validate({ ...base, exclude: [''], steps: ['wide'] }, 't')).toThrow('exclude[0]');
   });
 });
 
@@ -141,6 +151,13 @@ describe('canvas steps and setup', () => {
       { kind: 'hover', at: '#menu', on: undefined },
     ]);
     expect(validate({ ...base, steps: ['wide'] }, 't').checks.neighbours).toBe(true);
+  });
+
+  it('lets the stray check be switched off independently', () => {
+    expect(validate({ ...base, checks: { strays: false }, steps: ['wide'] }, 't').checks).toEqual({ neighbours: true, strays: false });
+    expect(validate({ ...base, checks: { neighbours: false }, steps: ['wide'] }, 't').checks).toEqual({ neighbours: false, strays: true });
+    expect(validate({ ...base, checks: {}, steps: ['wide'] }, 't').checks).toEqual({ neighbours: true, strays: true });
+    expect(() => validate({ ...base, checks: { strays: 'false' }, steps: ['wide'] }, 't')).toThrow('checks.strays');
   });
 
   it('plays setup steps off camera, and keeps camera steps out of setup', () => {

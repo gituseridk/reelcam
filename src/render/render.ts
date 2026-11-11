@@ -15,6 +15,7 @@ import { neighbourCuts } from './neighbours.js';
 import { Camera, Layout } from './geometry.js';
 import { bandOf } from './overlays.js';
 import { capture, planStills, writeSheet, type Still } from './sheet.js';
+import { strayInFrame } from './strays.js';
 
 export interface RenderOptions {
   output: string;
@@ -22,6 +23,8 @@ export interface RenderOptions {
   sheet: boolean;
   /** Fail the video when a neighbour is cut (default on; scripts can set `checks: { neighbours: false }`). */
   neighbours: boolean;
+  /** Fail the video when an unrelated element sits isolated at the frame edge (default on). */
+  strays: boolean;
 }
 
 export interface RenderResult {
@@ -76,6 +79,7 @@ export async function renderTake(take: Take, dir: string, preset: Preset, option
   const { views, framing, lay } = await encodeFrames(take, dir, preset, options.output, stills);
   const problems = [...checkFraming(framing, lay, views, take.clicks, [t0, t1]), ...covered(framing, lay, views, t0)];
   if (options.neighbours) problems.push(...neighbourCuts(framing, lay, views, t0));
+  if (options.strays) problems.push(...strayInFrame(framing, lay, views, t0));
   for (const h of take.hits) problems.push(`t=${(h.t - t0).toFixed(2)} s: forbidden text /${h.pattern}/ on screen: "${h.text}"`);
   const base = options.output.replace(/\.mp4$/i, '');
   const sheet = options.sheet ? `${base}.sheet.png` : undefined;

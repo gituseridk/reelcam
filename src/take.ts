@@ -5,7 +5,8 @@ import { z } from 'zod';
 
 const rect = z.object({ x: z.number(), y: z.number(), width: z.number().min(0), height: z.number().min(0) });
 const sample = z.tuple([z.number(), z.number(), z.number()]);
-export const item = z.object({ kind: z.enum(['text', 'box']), label: z.string(), rect });
+const domPath = z.array(z.number().int().positive()).min(1).optional();
+export const item = z.object({ kind: z.enum(['text', 'box']), label: z.string(), rect, domPath });
 
 export const takeSchema = z.object({
   version: z.literal(1),
@@ -15,7 +16,7 @@ export const takeSchema = z.object({
   pointer: z.array(sample),
   clicks: z.array(sample),
   shots: z
-    .array(z.object({ t: z.number(), name: z.string(), why: z.string(), window: z.boolean(), rect, zoom: z.number().optional() }))
+    .array(z.object({ t: z.number(), name: z.string(), why: z.string(), window: z.boolean(), rect, zoom: z.number().optional(), domPath }))
     .min(1),
   subjects: z.array(z.tuple([z.number(), z.number().int().min(0), rect])),
   captions: z.array(z.object({ t: z.number(), ms: z.number(), sprite: z.string() })),

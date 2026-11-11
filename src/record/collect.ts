@@ -2,9 +2,14 @@
  *  (text runs, cards, controls, images), each cut to what the app itself shows of it. A piece
  *  inside a scroller or an `overflow: hidden` box is clipped to that box, a fully clipped or hidden
  *  subtree is skipped whole, and a box that spans the page (a sidebar, a header bar) is page
- *  chrome, not a piece. These functions run in the browser: they may only call each other. */
+ *  chrome, not a piece. DOM paths identify subject relatives even when their boxes overflow.
+ *  These functions run in the browser: they may only call each other. */
 import { z } from 'zod';
 import { item, type Item } from '../take.js';
+import { elementPath as readElementPath } from './nodes.js';
+
+// Keep the name local so function serialization also works through module transforms.
+const elementPath = readElementPath;
 
 /** At most this many elements are visited per sample (hidden and clipped subtrees cost nothing). */
 export const VISIT_BUDGET = 8000;
@@ -63,7 +68,7 @@ export function pieceOf(el: Element, cs: CSSStyleDeclaration, clip: Box, inner: 
   const hit = document.elementFromPoint((Math.max(c.l, 0) + Math.min(c.r, vw)) / 2, (Math.max(c.t, 0) + Math.min(c.b, vh)) / 2);
   if (hit === null || !(el.contains(hit) || hit.contains(el))) return null; // under an overlay
   const label = text ? el.textContent.trim().replace(/\s+/g, ' ').slice(0, 40) : `${el.tagName.toLowerCase()}${el.id === '' ? '' : `#${el.id}`}`;
-  return { kind: text ? 'text' : 'box', label, rect: { x: c.l, y: c.t, width: w, height: h } };
+  return { kind: text ? 'text' : 'box', label, rect: { x: c.l, y: c.t, width: w, height: h }, domPath: elementPath(el) };
 }
 
 /** Walks the body depth first, skipping hidden and fully clipped subtrees. */
@@ -89,7 +94,7 @@ export function walk(budget: number): { items: Item[]; truncated: boolean } {
 }
 
 /** The script page.evaluate runs: the functions above, then one walk. */
-export const COLLECT = `(() => {\n${[meet, ownClip, passDown, pieceOf, walk].map(String).join('\n')}\nreturn walk(${String(VISIT_BUDGET)});\n})()`;
+export const COLLECT = `(() => {\n${[elementPath, meet, ownClip, passDown, pieceOf, walk].map(String).join('\n')}\nreturn walk(${String(VISIT_BUDGET)});\n})()`;
 
 const result = z.object({ items: z.array(item), truncated: z.boolean() });
 

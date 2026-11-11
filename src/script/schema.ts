@@ -16,10 +16,11 @@ export const scriptSchema = z
     colorScheme: z.enum(['light', 'dark']).default('light'),
     allowRemote: z.boolean().default(false),
     redact: z.array(z.string().min(1)).default([]),
+    exclude: z.array(z.string().min(1)).default([]),
     forbid: z.array(z.string().min(1)).default([]),
     output: z.string().min(1).optional(),
     gif: z.boolean().default(false),
-    checks: z.strictObject({ neighbours: z.boolean().default(true) }).default({ neighbours: true }),
+    checks: z.strictObject({ neighbours: z.boolean().default(true), strays: z.boolean().default(true) }).default({ neighbours: true, strays: true }),
     seed: z.number().int().min(0).default(1),
     /** Steps played before filming starts (sign in, dismiss a banner, give the app focus). */
     setup: z

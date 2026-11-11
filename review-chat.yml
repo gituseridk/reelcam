@@ -1,0 +1,20 @@
+title: Ask, and the answer streams in
+url: http://127.0.0.1:47311/
+viewport: { width: 1280, height: 720 }
+colorScheme: dark
+
+setup:
+  - type: { into: "input[type=password]", text: "made-up-demo-key" }
+  - press: Enter
+  - waitFor: "[data-composer]"
+  - click: "[aria-label='Hide tools']"
+steps:
+  - wide
+  - wait: 2200
+  - zoom: { on: "[data-composer-card]", level: 1.6 }
+  - type: { into: "[data-composer]", text: "Ideas for a cheap date this weekend?", delay: 55 }
+  - press: Enter
+  - wide: "the reply streams in above the box"
+  - wait: 4200
+  - caption: The reply streams in, word by word
+  - wait: 2000

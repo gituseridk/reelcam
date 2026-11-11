@@ -76,7 +76,8 @@ locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
   records. The camera cuts between shots on a critically damped spring, and it never chases the cursor.
 - **It checks itself.** The render fails (exit 1) when a frame crops its subject, a shot
   flickers past in under 1.2 s, a click happens off camera, a caption covers the subject, another
-  element is cut at the frame edge, or forbidden text (say `lorem` or `TODO`) appears on screen.
+  element is cut or sits isolated at the frame edge, or forbidden text (say `lorem` or `TODO`)
+  appears on screen.
 - **It is repeatable.** A script is code: review it in a PR, re-record it after every UI change,
   and render it in CI. The pointer's jitter is seeded.
 - **It suits agents.** The [agent skill](skills/reelcam/SKILL.md) teaches a coding agent to film the
@@ -96,11 +97,12 @@ locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
 | `preset` | `studio` | The look (see Presets). |
 | `colorScheme` | `light` | `light` or `dark`. |
 | `redact` | `[]` | Selectors to blur in every frame. |
+| `exclude` | `[]` | CSS selectors to hide, including descendants, while preserving layout (for example `["#new-chat"]`). Applies during setup and on every visit. |
 | `forbid` | `[]` | Regular expressions (case-insensitive) that fail the video if visible. |
 | `allowRemote` | `false` | Allow non-local URLs. |
 | `output` | `out/<name>.mp4` | Where to write the MP4. A path given here is relative to the script; the default `out/` is in the directory you run reelcam from (see below). |
 | `gif` | `false` | Also write a GIF. |
-| `checks` | `{ neighbours: true }` | Which optional checks run. `neighbours: false` turns off the neighbour check (camera rule 9); the other checks always run. |
+| `checks` | `{ neighbours: true, strays: true }` | Which optional checks run. `neighbours: false` turns off the neighbour check (camera rule 9); `strays: false` turns off the stray-in-frame check (rule 10). The other checks always run. |
 | `seed` | `1` | Seed for the pointer's human jitter. |
 | `setup` | `[]` | Steps played before filming starts: sign in, dismiss a banner, give a canvas app keyboard focus. No camera steps. |
 | `steps` | | The list below. |
@@ -162,6 +164,12 @@ problem with its path, such as `steps[3].type.text: expected string`.
    `overflow: hidden` box) counts only as far as it shows, and chrome that spans the page (a
    full-height sidebar, a full-width header bar) is not a neighbour, though what is in it is.
    Opt out with `checks: { neighbours: false }`.
+10. No isolated strays: in a focus or zoom shot, a small, fully visible element near the frame
+    edge fails its check when mostly empty space separates it from the subject. The subject's
+    parents and children, and nearby controls such as a toolbar, do not count. The camera may
+    nudge or tighten the frame when it can remove a stray without cutting the subject. If one
+    remains, the check names it and suggests a tighter zoom level or `exclude:`. Opt out with
+    `checks: { strays: false }`.
 
 ## Presets
 
