@@ -14,6 +14,8 @@ export class Director {
   readonly shots: Shot[] = [];
   readonly subjects: [number, number, Rect][] = [];
   private token: object | null = null;
+  /** Whether anything happened on camera since the last shot began (see `seen`). */
+  private shown = false;
   private sampler: Promise<void> = Promise.resolve();
 
   constructor(private readonly page: Page) {}
@@ -46,7 +48,8 @@ export class Director {
     const rect = await this.rect(subject, 5000); // a busy page may take a moment to answer
     if (rect === null) throw new UserError(`shot "${name}": the subject is not visible on the page`, 'Scroll it into view first, or wait for it with "waitFor".');
     const domPath = subject === 'window' || 'area' in subject ? undefined : await subject.evaluate(elementPath);
-    this.dropInstantShot();
+    this.dropUnseenShot();
+    this.shown = false;
     const index = this.shots.length;
     this.shots.push({ t: now(), name, why, window: subject === 'window', rect, ...(zoom === undefined ? {} : { zoom }), ...(domPath === undefined ? {} : { domPath }) });
     if (subject === 'window' || 'area' in subject) return;
@@ -55,10 +58,17 @@ export class Director {
     this.sampler = this.sample(subject, index, token);
   }
 
-  /** A shot replaced in the same instant (e.g. the automatic start shot) was never seen: drop it. */
-  private dropInstantShot(): void {
+  /** Something happened on camera (a step that acts or waits): the current shot has been seen. */
+  seen(): void {
+    this.shown = true;
+  }
+
+  /** A shot replaced before anything happened on camera (e.g. the automatic start shot right
+   *  before a first focus) was never seen: drop it. Decided by events, not by the clock, since a
+   *  slow machine may take a while to measure the next subject. */
+  private dropUnseenShot(): void {
     const last = this.shots.at(-1);
-    if (last === undefined || now() - last.t > 0.05) return;
+    if (last === undefined || this.shown) return;
     const index = this.shots.length - 1;
     this.shots.pop();
     for (let i = this.subjects.length - 1; i >= 0; i--) if (this.subjects[i]?.[1] === index) this.subjects.splice(i, 1);
