@@ -5,7 +5,7 @@ import { z } from 'zod';
 
 const rect = z.object({ x: z.number(), y: z.number(), width: z.number().min(0), height: z.number().min(0) });
 const sample = z.tuple([z.number(), z.number(), z.number()]);
-const item = z.object({ kind: z.enum(['text', 'box']), label: z.string(), rect });
+export const item = z.object({ kind: z.enum(['text', 'box']), label: z.string(), rect });
 
 export const takeSchema = z.object({
   version: z.literal(1),
