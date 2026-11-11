@@ -26,7 +26,7 @@ describe('ffmpeg arguments', () => {
 
 describe('Encoder', () => {
   it('writes a playable MP4', async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'showreel-enc-'));
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'reelcam-enc-'));
     const out = path.join(dir, 'a.mp4');
     const enc = new Encoder(tiny, out);
     const frame = Buffer.alloc(64 * 36 * 4, 200);
@@ -38,11 +38,11 @@ describe('Encoder', () => {
   it('turns a missing ffmpeg into a UserError with an install hint', async () => {
     process.env[FFMPEG_ENV] = '/no/such/ffmpeg';
     await expect(runFfmpeg(['-version'])).rejects.toThrow(UserError);
-    const enc = new Encoder(tiny, path.join(os.tmpdir(), 'showreel-never.mp4'));
+    const enc = new Encoder(tiny, path.join(os.tmpdir(), 'reelcam-never.mp4'));
     await expect(enc.finish()).rejects.toThrow(/cannot run ffmpeg/);
   });
 
   it('reports ffmpeg failures with its stderr', async () => {
-    await expect(runFfmpeg(['-i', '/no/such/input.mp4', path.join(os.tmpdir(), 'showreel-never.gif')])).rejects.toThrow(/ffmpeg failed/);
+    await expect(runFfmpeg(['-i', '/no/such/input.mp4', path.join(os.tmpdir(), 'reelcam-never.gif')])).rejects.toThrow(/ffmpeg failed/);
   });
 });

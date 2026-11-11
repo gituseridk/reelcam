@@ -1,20 +1,20 @@
 ---
-name: showreel
-description: Make a short cinematic MP4 demo video of a web app feature with the Showreel CLI. Use when asked to record, show off, or demo a UI change, make a product video, a PR demo clip, or a README hero video of a web app.
+name: reelcam
+description: Make a short cinematic MP4 demo video of a web app feature with the Reelcam CLI. Use when asked to record, show off, or demo a UI change, make a product video, a PR demo clip, or a README hero video of a web app.
 ---
 
-# Showreel: demo videos of web apps
+# Reelcam: demo videos of web apps
 
-Showreel records a YAML script in headless Chromium and renders a 1080p MP4 with a camera that
-frames UI elements, a smooth pointer, click ripples and captions. You write the script; Showreel
+Reelcam records a YAML script in headless Chromium and renders a 1080p MP4 with a camera that
+frames UI elements, a smooth pointer, click ripples and captions. You write the script; Reelcam
 does the filming.
 
 ## 1. Check the tools
 
 ```sh
-showreel --help || npx showreel --help
+reelcam --help || npx reelcam --help
 ```
-If Chromium is missing, run `showreel setup` (on Linux CI: `showreel setup --with-deps`).
+If Chromium is missing, run `reelcam setup` (on Linux CI: `reelcam setup --with-deps`).
 ffmpeg must be on PATH.
 
 ## 2. Decide the ONE idea
@@ -59,8 +59,8 @@ Camera rules (the check enforces the first three):
 ## 4. Render and look
 
 ```sh
-showreel check demo.yml
-showreel render demo.yml -o out/demo.mp4
+reelcam check demo.yml
+reelcam render demo.yml -o out/demo.mp4
 ```
 Exit code 1 means the video was written but failed a check (cropped subject, flicker shot,
 click outside the frame, caption over the subject, forbidden text): read the warnings and fix

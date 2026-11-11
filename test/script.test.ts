@@ -75,7 +75,7 @@ describe('isLocalUrl', () => {
 
 describe('loadScript', () => {
   async function write(text: string): Promise<string> {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'showreel-test-'));
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'reelcam-test-'));
     const file = path.join(dir, 'demo.yml');
     await writeFile(file, text);
     return file;

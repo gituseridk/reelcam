@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Runs the README Quickstart, exactly as written, in a clean official Node container.
-# The one substitution: until the package is published, "npm install --global showreel" installs
+# The one substitution: until the package is published, "npm install --global reelcam" installs
 # the tarball from "npm pack" instead of the registry. Prerequisites the README names (ffmpeg) are
 # installed first. Usage: scripts/fresh-install.sh [image]   (default node:22-bookworm)
 set -euo pipefail
@@ -8,19 +8,19 @@ cd "$(dirname "$0")/.."
 image="${1:-node:22-bookworm}"
 engine="$(command -v docker || command -v podman)"
 
-work="$(mktemp -d "${TMPDIR:-/tmp}/showreel-fresh-XXXXXX")"
+work="$(mktemp -d "${TMPDIR:-/tmp}/reelcam-fresh-XXXXXX")"
 trap 'rm -rf "$work"' EXIT
 npm pack --silent --pack-destination "$work" >/dev/null
-tarball="$(basename "$(ls "$work"/showreel-*.tgz)")"
+tarball="$(basename "$(ls "$work"/reelcam-*.tgz)")"
 
 quickstart="$(awk '/<!-- quickstart:start -->/{on=1; next} /<!-- quickstart:end -->/{on=0} on' README.md | sed '/^```/d')"
 [[ -n "$quickstart" ]] || { echo "no quickstart block in README.md" >&2; exit 1; }
-commands="${quickstart//npm install --global showreel/npm install --global /pkg/$tarball}"
+commands="${quickstart//npm install --global reelcam/npm install --global /pkg/$tarball}"
 printf '%s\n' "$commands" > "$work/quickstart.sh"
 echo "== Quickstart as run (README with the tarball substitution):"
 cat "$work/quickstart.sh"
 
-results="$PWD/.showreel/fresh-install"
+results="$PWD/.reelcam/fresh-install"
 rm -rf "$results" && mkdir -p "$results"
 "$engine" run --rm --memory 6g -v "$work:/pkg:ro" -v "$results:/result" -w /home/node "$image" bash -euo pipefail -c '
   apt-get update -qq && apt-get install -yqq ffmpeg >/dev/null
@@ -31,4 +31,4 @@ rm -rf "$results" && mkdir -p "$results"
   ls -la out/
   cp out/demo.mp4 out/demo.sheet.png /result/
 '
-echo "== fresh install check passed in $image; video and sheet in .showreel/fresh-install/"
+echo "== fresh install check passed in $image; video and sheet in .reelcam/fresh-install/"

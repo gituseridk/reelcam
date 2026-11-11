@@ -44,7 +44,7 @@ describe('action.yml', () => {
 
 describe('action/render.sh', () => {
   it('renders the script and writes the step outputs', async () => {
-    const dir = await mkdtemp(path.join(os.tmpdir(), 'showreel-action-'));
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'reelcam-action-'));
     const outputs = path.join(dir, 'outputs.txt');
     const env = { ...process.env, GITHUB_ACTION_PATH: process.cwd(), GITHUB_OUTPUT: outputs, RENDER_SCRIPT: 'examples/quickstart.yml', RENDER_OUTPUT: path.join(dir, 'q.mp4') };
     const res = spawnSync('bash', ['action/render.sh'], { env, encoding: 'utf8' });

@@ -14,7 +14,7 @@ let dir: string;
 
 beforeAll(async () => {
   setLevel('quiet');
-  dir = await mkdtemp(path.join(os.tmpdir(), 'showreel-e2e-'));
+  dir = await mkdtemp(path.join(os.tmpdir(), 'reelcam-e2e-'));
 });
 
 async function script(name: string, body: string, viewport = '{ width: 1280, height: 720 }'): Promise<string> {

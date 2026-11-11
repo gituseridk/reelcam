@@ -1,13 +1,13 @@
-# Showreel
+# Reelcam
 
 **Cinematic demo videos of your web app, from a short YAML script.** A camera that frames what
 matters and moves ahead of the action, a pointer that moves like a person, captions that never
 cover the subject, and a check that fails the video when the camera crops it. Runs headless, in
 CI, or by your coding agent.
 
-[![The hero video, made by Showreel](docs/hero.png)](docs/hero.mp4)
+[![The hero video, made by Reelcam](docs/hero.png)](docs/hero.mp4)
 
-<sub>The video above (click for the MP4) was recorded by Showreel from these 17 lines,
+<sub>The video above (click for the MP4) was recorded by Reelcam from these 17 lines,
 [`examples/hero.yml`](examples/hero.yml). The demo app, Orbit, is in [`examples/orbit`](examples/orbit).</sub>
 
 ```yaml
@@ -37,7 +37,7 @@ The same story as a 9:16 phone video, from [`examples/hero-vertical.yml`](exampl
 
 | | |
 |---|---|
-| [![Excalidraw, filmed by Showreel](docs/gallery/excalidraw.png)](docs/gallery/excalidraw.mp4) | **Excalidraw** (MIT), built and run locally. A two-step flow sketched with the keyboard tools, filmed by [a 22-line script](examples/gallery/excalidraw/excalidraw.yml) with `drag`, a `setup` step and an `area` shot. |
+| [![Excalidraw, filmed by Reelcam](docs/gallery/excalidraw.png)](docs/gallery/excalidraw.mp4) | **Excalidraw** (MIT), built and run locally. A two-step flow sketched with the keyboard tools, filmed by [a 22-line script](examples/gallery/excalidraw/excalidraw.yml) with `drag`, a `setup` step and an `area` shot. |
 
 Every video has a per-moment content audit in [docs/AUDIT.md](docs/AUDIT.md).
 
@@ -47,19 +47,19 @@ Needs Node.js 22.12+ and ffmpeg.
 
 <!-- quickstart:start -->
 ```sh
-npm install --global showreel
-showreel setup --with-deps
-showreel init --demo showreel-demo
-showreel render showreel-demo/demo.yml
+npm install --global reelcam
+reelcam setup --with-deps
+reelcam init --demo reelcam-demo
+reelcam render reelcam-demo/demo.yml
 ```
 <!-- quickstart:end -->
 
 That records the bundled demo app and writes `out/demo.mp4` and `out/demo.sheet.png`, a
 contact sheet with four stills per shot. (`--with-deps` also installs Chromium's system
-libraries on Linux and may need `sudo`; on macOS and Windows plain `showreel setup` is enough.)
+libraries on Linux and may need `sudo`; on macOS and Windows plain `reelcam setup` is enough.)
 
-For your own app: `showreel init` writes a starter `showreel.yml`. Point `url` at your app running
-locally, or `serve` at a built folder, then `showreel render showreel.yml`.
+For your own app: `reelcam init` writes a starter `reelcam.yml`. Point `url` at your app running
+locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
 
 ## Why
 
@@ -70,7 +70,7 @@ locally, or `serve` at a built folder, then `showreel render showreel.yml`.
   forbidden text (say `lorem` or `TODO`) appears on screen.
 - **It is repeatable.** A script is code: review it in a PR, re-record it after every UI change,
   and render it in CI. The pointer's jitter is seeded.
-- **It suits agents.** The [agent skill](skills/showreel/SKILL.md) teaches a coding agent to film the
+- **It suits agents.** The [agent skill](skills/reelcam/SKILL.md) teaches a coding agent to film the
   feature it just built and check the contact sheet before reporting.
 - **It is private by default.** It opens local URLs only unless you opt in, and `redact` blurs
   selectors before the first frame.
@@ -113,7 +113,7 @@ locally, or `serve` at a built folder, then `showreel render showreel.yml`.
 | `caption` | `caption: "Saved"` or `caption: { text: "Saved", ms: 2500 }` | A caption at the bottom; the camera leaves room for it. |
 
 Selectors are [Playwright selectors](https://playwright.dev/docs/locators): CSS plus
-`:has-text()`, `>> nth=1` and more. `showreel check script.yml` validates a script and lists every
+`:has-text()`, `>> nth=1` and more. `reelcam check script.yml` validates a script and lists every
 problem with its path, such as `steps[3].type.text: expected string`.
 
 ## Camera rules
@@ -151,7 +151,7 @@ caption style. New presets are welcome.
 ```yaml
 - uses: actions/checkout@v4
 - run: npm ci && (npm start &) && npx wait-on http://localhost:3000
-- uses: showreel/showreel@v0        # placeholder: set to the published repository
+- uses: gituseridk/reelcam@v0
   with:
     script: demos/signup.yml
 ```
@@ -163,11 +163,11 @@ uploads the MP4 and contact sheet as an artifact. Inputs: `script`, `output`, `p
 ## CLI
 
 ```
-showreel render <script.yml> [-o out.mp4] [-p preset] [--gif] [--no-sheet] [--no-check] [--allow-remote] [--keep dir]
-showreel check <script.yml>
-showreel init [file] | showreel init --demo [dir]
-showreel setup [--with-deps]
-showreel presets
+reelcam render <script.yml> [-o out.mp4] [-p preset] [--gif] [--no-sheet] [--no-check] [--allow-remote] [--keep dir]
+reelcam check <script.yml>
+reelcam init [file] | reelcam init --demo [dir]
+reelcam setup [--with-deps]
+reelcam presets
 ```
 
 Exit codes: 0 ok, 1 written but failed a check, 2 usage, 3 error. Logs go to stderr and the
@@ -176,7 +176,7 @@ written file paths to stdout.
 ## API
 
 ```ts
-import { render } from 'showreel';
+import { render } from 'reelcam';
 
 const result = await render('demo.yml', { output: 'out/demo.mp4', gif: false });
 if (result.problems.length > 0) console.error(result.problems);

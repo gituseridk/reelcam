@@ -1,17 +1,53 @@
 {
-  "name": "showreel",
+  "name": "reelcam",
   "version": "0.1.0",
-  "displayName": "Showreel",
+  "displayName": "Reelcam",
   "description": "Cinematic MP4 demo videos of any web app, from a short YAML script. CLI, GitHub Action and agent skill.",
   "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gituseridk/reelcam.git"
+  },
+  "homepage": "https://github.com/gituseridk/reelcam#readme",
+  "bugs": {
+    "url": "https://github.com/gituseridk/reelcam/issues"
+  },
   "type": "module",
-  "bin": { "showreel": "dist/cli.js" },
+  "bin": {
+    "reelcam": "dist/cli.js"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
-  "exports": { ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" } },
-  "files": ["dist", "skills", "examples/orbit", "examples/pebble", "examples/*.yml", "action", "action.yml", "README.md", "LICENSE"],
-  "engines": { "node": ">=22.12" },
-  "keywords": ["demo", "video", "screencast", "playwright", "mp4", "camera", "agent", "github-action"],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "skills",
+    "examples/orbit",
+    "examples/pebble",
+    "examples/*.yml",
+    "action",
+    "action.yml",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=22.12"
+  },
+  "keywords": [
+    "demo",
+    "video",
+    "screencast",
+    "playwright",
+    "mp4",
+    "camera",
+    "agent",
+    "github-action"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",

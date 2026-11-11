@@ -3,7 +3,7 @@ serve: pebble
 viewport: { width: 1280, height: 720 }
 steps:
   - focus: "#composer"
-  - type: { into: "#new-task", text: "Hello, Showreel" }
+  - type: { into: "#new-task", text: "Hello, Reelcam" }
   - press: Enter
   - focus: "#today"
   - wait: 1200

@@ -8,7 +8,7 @@ let root: string;
 let served: Served;
 
 beforeAll(async () => {
-  const outer = await mkdtemp(path.join(os.tmpdir(), 'showreel-serve-'));
+  const outer = await mkdtemp(path.join(os.tmpdir(), 'reelcam-serve-'));
   root = path.join(outer, 'site');
   await mkdir(path.join(root, 'sub'), { recursive: true });
   await writeFile(path.join(root, 'index.html'), '<h1>home</h1>');

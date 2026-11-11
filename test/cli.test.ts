@@ -41,7 +41,7 @@ describe('cli', () => {
   });
 
   it('init writes a starter that passes check, and refuses to overwrite', async () => {
-    const file = path.join(await mkdtemp(path.join(os.tmpdir(), 'showreel-cli-')), 'showreel.yml');
+    const file = path.join(await mkdtemp(path.join(os.tmpdir(), 'reelcam-cli-')), 'reelcam.yml');
     expect(await run('init', file)).toBe(0);
     expect(await readFile(file, 'utf8')).toContain('steps:');
     expect(await run('check', file)).toBe(0);
@@ -51,7 +51,7 @@ describe('cli', () => {
   });
 
   it('check reports every problem with its path and exits 3', async () => {
-    const file = path.join(await mkdtemp(path.join(os.tmpdir(), 'showreel-cli-')), 'bad.yml');
+    const file = path.join(await mkdtemp(path.join(os.tmpdir(), 'reelcam-cli-')), 'bad.yml');
     await writeFile(file, 'url: http://localhost:1\nsteps:\n  - clik: "#a"\n  - wait: -5\n');
     expect(await run('check', file)).toBe(3);
     const text = logged.join('\n');
@@ -67,7 +67,7 @@ describe('cli', () => {
 
 describe('cli demo and setup', () => {
   it('init --demo copies the app and a script that passes check', async () => {
-    const target = path.join(await mkdtemp(path.join(os.tmpdir(), 'showreel-demo-')), 'demo');
+    const target = path.join(await mkdtemp(path.join(os.tmpdir(), 'reelcam-demo-')), 'demo');
     expect(await run('init', '--demo', target)).toBe(0);
     expect(await readFile(path.join(target, 'orbit', 'index.html'), 'utf8')).toContain('Orbit');
     expect(await run('check', path.join(target, 'demo.yml'))).toBe(0);

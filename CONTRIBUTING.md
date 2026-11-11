@@ -15,7 +15,7 @@ npm run check                     # lint + typecheck + tests (the tests record r
 
 - `npm run check` passes with zero warnings. ESLint runs the strict, type-checked rule sets.
 - No non-null assertions, no `any`, and no empty or silent `catch`. A user-facing failure is a
-  `ShowreelError` with a message and a hint.
+  `ReelcamError` with a message and a hint.
 - Functions stay at 50 lines or fewer, and files at 200 or fewer.
 - Every feature has a test. Anything visual also gets a render: open the contact sheet
   (`out/<name>.sheet.png`) and look at it before you open the PR.

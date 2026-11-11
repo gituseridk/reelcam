@@ -1,4 +1,4 @@
-// Pebble: a tiny task list used to demo Showreel. No build step, no dependencies.
+// Pebble: a tiny task list used to demo Reelcam. No build step, no dependencies.
 const tasks = [
   { title: 'Review the onboarding copy', tag: 'Design', done: true },
   { title: 'Fix the flaky upload test', tag: 'Eng', done: false },
