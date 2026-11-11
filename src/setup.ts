@@ -1,4 +1,4 @@
-/** `setup` installs the Chromium build that our own Playwright expects, and
+/** `setup` installs the Chromium headless shell that our own Playwright expects, and
  *  `init --demo` copies the bundled demo app with a script that records it. */
 import { spawn } from 'node:child_process';
 import { access, cp, mkdir, readFile, writeFile } from 'node:fs/promises';
@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 import { UserError, describe } from './errors.js';
 import { NAME } from './brand.js';
 import { log } from './log.js';
+import { FFMPEG_ENV } from './render/encode.js';
 
 /** The package root (where examples/ lives), from dist/ or src/. */
 export const PACKAGE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -21,12 +22,18 @@ export function playwrightCli(): string {
   }
 }
 
-/** Runs `playwright install chromium` (with `--with-deps` for system libraries on Linux). */
+/** The Playwright install arguments: only Chromium's headless shell, the one build a headless
+ *  launch uses (Playwright adds its small ffmpeg; reelcam encodes with the system one). */
+export function installArgs(withDeps: boolean): string[] {
+  return ['install', ...(withDeps ? ['--with-deps'] : []), '--only-shell', 'chromium'];
+}
+
+/** Installs Chromium's headless shell for Playwright (with `--with-deps` for system libraries on Linux). */
 export async function installBrowser(withDeps: boolean): Promise<void> {
-  const args = [playwrightCli(), 'install', ...(withDeps ? ['--with-deps'] : []), 'chromium'];
-  log.info(`installing Chromium for Playwright${withDeps ? ' with system dependencies' : ''}`);
+  log.info(`installing Chromium's headless shell for Playwright${withDeps ? ' with system dependencies' : ''} (about 115 MB)`);
+  log.info(`videos are encoded with the ffmpeg on your PATH (or ${FFMPEG_ENV}), not one from Playwright`);
   const code = await new Promise<number | null>((resolve, reject) => {
-    const proc = spawn(process.execPath, args, { stdio: 'inherit' });
+    const proc = spawn(process.execPath, [playwrightCli(), ...installArgs(withDeps)], { stdio: 'inherit' });
     proc.once('error', reject);
     proc.once('close', resolve);
   });

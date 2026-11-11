@@ -7,7 +7,7 @@ well-known open-source app, or a sharper error message.
 
 ```sh
 npm ci
-npx playwright install chromium   # and ffmpeg on your PATH
+npx playwright install --only-shell chromium   # and ffmpeg on your PATH
 npm run check                     # lint + typecheck + tests (the tests record real videos)
 ```
 

@@ -78,4 +78,10 @@ describe('cli demo and setup', () => {
     const { playwrightCli } = await import('../src/setup.js');
     expect((await readFile(playwrightCli(), 'utf8')).length).toBeGreaterThan(0);
   });
+
+  it('installs only the headless shell (a headless launch uses nothing else)', async () => {
+    const { installArgs } = await import('../src/setup.js');
+    expect(installArgs(false)).toEqual(['install', '--only-shell', 'chromium']);
+    expect(installArgs(true)).toEqual(['install', '--with-deps', '--only-shell', 'chromium']);
+  });
 });

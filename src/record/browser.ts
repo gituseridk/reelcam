@@ -1,5 +1,6 @@
 /** Starts headless Chromium with sound off, and turns Playwright's install errors into a hint. */
 import { chromium, type Browser } from 'playwright';
+import { NAME } from '../brand.js';
 import { UserError, describe } from '../errors.js';
 
 /** Headless screencasts come at 1x unless the scale is forced at launch, so it is forced here. */
@@ -10,7 +11,7 @@ export async function launchBrowser(scale: number): Promise<Browser> {
   } catch (error) {
     const text = describe(error);
     if (/Executable doesn't exist|playwright install/i.test(text)) {
-      throw new UserError('Chromium for Playwright is not installed', 'Run: npx playwright install --with-deps chromium', { cause: error });
+      throw new UserError('Chromium for Playwright is not installed', `Run: ${NAME} setup (or: npx playwright install --with-deps --only-shell chromium)`, { cause: error });
     }
     throw new UserError(`cannot start Chromium: ${text.split('\n')[0] ?? text}`, 'On Linux, run: npx playwright install-deps chromium', { cause: error });
   }
