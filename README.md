@@ -188,7 +188,7 @@ caption style. New presets are welcome.
 ## GitHub Action
 
 ```yaml
-- uses: actions/checkout@v4
+- uses: actions/checkout@v7
 - run: npm ci && (npm start &) && npx wait-on http://localhost:3000
 - uses: gituseridk/reelcam@v0
   with:
