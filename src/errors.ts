@@ -9,6 +9,15 @@ export class UserError extends Error {
   }
 }
 
+/** A failure caused by what the user asked for (the command line, the script, a file that would
+ *  be overwritten): exit code 2, fix the input and run again. */
+export class UsageError extends UserError {
+  constructor(message: string, hint?: string, options?: { cause?: unknown }) {
+    super(message, hint, options);
+    this.name = 'UsageError';
+  }
+}
+
 /** A readable one-line description of any thrown value. */
 export function describe(error: unknown): string {
   if (error instanceof Error) return error.message;

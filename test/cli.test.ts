@@ -45,23 +45,43 @@ describe('cli', () => {
     expect(await run('init', file)).toBe(0);
     expect(await readFile(file, 'utf8')).toContain('steps:');
     expect(await run('check', file)).toBe(0);
-    expect(await run('init', file)).toBe(3);
-    expect(logged.join('\n')).toContain('--force');
+    expect(await run('init', file)).toBe(2);
+    expect(logged).toContain(`${NAME}: hint: Pass --force to overwrite it.`);
     expect(await run('init', file, '--force')).toBe(0);
   });
 
-  it('check reports every problem with its path and exits 3', async () => {
+  it('check reports every problem with its path and exits 2 (usage)', async () => {
     const file = path.join(await mkdtemp(path.join(os.tmpdir(), 'reelcam-cli-')), 'bad.yml');
     await writeFile(file, 'url: http://localhost:1\nsteps:\n  - clik: "#a"\n  - wait: -5\n');
-    expect(await run('check', file)).toBe(3);
+    expect(await run('check', file)).toBe(2);
     const text = logged.join('\n');
     expect(text).toContain('steps[0]: unknown step "clik"');
     expect(text).toContain('steps[1].wait');
   });
 
   it('render needs exactly one script', async () => {
-    expect(await run('render')).toBe(3);
-    expect(await run('render', 'a.yml', 'b.yml')).toBe(3);
+    expect(await run('render')).toBe(2);
+    expect(await run('render', 'a.yml', 'b.yml')).toBe(2);
+  });
+});
+
+describe('cli version and exit codes', () => {
+  it('prints the version with --version and -V', async () => {
+    const { version } = JSON.parse(await readFile('package.json', 'utf8')) as { version: string };
+    expect(await run('--version')).toBe(0);
+    expect(await run('-V')).toBe(0);
+    expect(printed).toEqual([version, version]);
+  });
+
+  it('exits 2 for a non-local URL, an unknown preset or a missing script; hints read as hints', async () => {
+    const dir = await mkdtemp(path.join(os.tmpdir(), 'reelcam-cli-'));
+    const remote = path.join(dir, 'remote.yml');
+    await writeFile(remote, 'url: https://example.com/\nsteps:\n  - wait: 100\n');
+    expect(await run('check', remote)).toBe(2);
+    expect(await run('render', remote, '-p', 'nope')).toBe(2);
+    expect(await run('check', path.join(dir, 'missing.yml'))).toBe(2);
+    expect(logged.filter((l) => l.includes('hint:')).every((l) => l.startsWith(`${NAME}: hint: `))).toBe(true);
+    expect(logged.join('\n')).not.toContain('error: hint');
   });
 });
 
@@ -71,7 +91,7 @@ describe('cli demo and setup', () => {
     expect(await run('init', '--demo', target)).toBe(0);
     expect(await readFile(path.join(target, 'orbit', 'index.html'), 'utf8')).toContain('Orbit');
     expect(await run('check', path.join(target, 'demo.yml'))).toBe(0);
-    expect(await run('init', '--demo', target)).toBe(3);
+    expect(await run('init', '--demo', target)).toBe(2);
   });
 
   it('finds the bundled Playwright CLI for setup', async () => {

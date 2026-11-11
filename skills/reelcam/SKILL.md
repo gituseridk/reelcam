@@ -63,8 +63,10 @@ reelcam check demo.yml
 reelcam render demo.yml -o out/demo.mp4
 ```
 Exit code 1 means the video was written but failed a check (cropped subject, flicker shot,
-click outside the frame, caption over the subject, forbidden text): read the warnings and fix
-the script.
+click outside the frame, caption over the subject, a neighbour cut at the frame edge, forbidden
+text): read the `error:` lines and fix the script. Exit code 2 means the command or the script is
+wrong (the message says where). A shot holds still for the time until the next camera step
+minus 0.7 s, so give each shot 1900 ms or more.
 
 Then OPEN `out/demo.sheet.png` (the contact sheet: four stills per shot) and judge every
 still: is the subject whole and readable, is anything on screen that does not serve the idea,

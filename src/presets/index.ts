@@ -1,5 +1,5 @@
 /** The built-in presets. To add one, copy a block, give it a new name and a one-line description. */
-import { UserError } from '../errors.js';
+import { UsageError } from '../errors.js';
 import type { Preset } from './types.js';
 
 export type { Preset } from './types.js';
@@ -69,6 +69,6 @@ export const PRESETS: readonly Preset[] = [studio, daylight, bare, vertical, squ
 
 export function getPreset(name: string): Preset {
   const found = PRESETS.find((p) => p.name === name);
-  if (found === undefined) throw new UserError(`unknown preset "${name}"`, `Built-in presets: ${PRESETS.map((p) => p.name).join(', ')}.`);
+  if (found === undefined) throw new UsageError(`unknown preset "${name}"`, `Built-in presets: ${PRESETS.map((p) => p.name).join(', ')}.`);
   return found;
 }

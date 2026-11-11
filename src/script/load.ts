@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { parse } from 'yaml';
 import type { z } from 'zod';
-import { UserError, describe } from '../errors.js';
+import { UsageError, describe } from '../errors.js';
 import { scriptSchema, type Script } from './schema.js';
 
 export interface LoadedScript {
@@ -39,17 +39,17 @@ export function isLocalUrl(raw: string): boolean {
   return host === 'localhost' || host.endsWith('.localhost') || host === '[::1]' || /^127(\.\d{1,3}){3}$/.test(host);
 }
 
-/** Validates already-parsed YAML data. Throws UserError listing every problem. */
+/** Validates already-parsed YAML data. Throws UsageError listing every problem. */
 export function validate(data: unknown, label: string): Script {
   const result = scriptSchema.safeParse(data);
-  if (!result.success) throw new UserError(`${label} is not a valid script:\n${formatIssues(result.error.issues)}`, 'See "Script format" in the README.');
+  if (!result.success) throw new UsageError(`${label} is not a valid script:\n${formatIssues(result.error.issues)}`, 'See "Script format" in the README.');
   const script = result.data;
   const remote = [script.url, ...script.steps.flatMap((s) => (s.kind === 'visit' ? [s.url] : []))].filter(
     (u): u is string => u !== undefined && /^[a-z]+:/i.test(u) && !isLocalUrl(u),
   );
   const first = remote[0];
   if (first !== undefined && !script.allowRemote) {
-    throw new UserError(`${label} opens a non-local URL: ${first}`, 'Only local apps are recorded by default. Set "allowRemote: true" in the script (or pass --allow-remote) if you mean it.');
+    throw new UsageError(`${label} opens a non-local URL: ${first}`, 'Only local apps are recorded by default. Set "allowRemote: true" in the script (or pass --allow-remote) if you mean it.');
   }
   return script;
 }
@@ -60,13 +60,13 @@ export async function loadScript(file: string, options: { output?: string | unde
   try {
     text = await readFile(abs, 'utf8');
   } catch (error) {
-    throw new UserError(`cannot read the script ${file}: ${describe(error)}`, 'Check the path.', { cause: error });
+    throw new UsageError(`cannot read the script ${file}: ${describe(error)}`, 'Check the path.', { cause: error });
   }
   let data: unknown;
   try {
     data = parse(text, { prettyErrors: true });
   } catch (error) {
-    throw new UserError(`${file} is not valid YAML: ${describe(error)}`, undefined, { cause: error });
+    throw new UsageError(`${file} is not valid YAML: ${describe(error)}`, undefined, { cause: error });
   }
   if (options.allowRemote === true && typeof data === 'object' && data !== null) Object.assign(data, { allowRemote: true });
   const script = validate(data, file);

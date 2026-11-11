@@ -2,7 +2,7 @@
 import { access, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { NAME } from './brand.js';
-import { UserError } from './errors.js';
+import { UsageError } from './errors.js';
 import { render } from './index.js';
 import { log } from './log.js';
 import { PRESETS } from './presets/index.js';
@@ -47,11 +47,16 @@ Options for render:
       --keep <dir>       keep the raw take (frames and take.json) in <dir>
   -v, --verbose / -q, --quiet
 
-Exit codes: 0 ok, 1 the video was written but failed its checks, 2 usage, 3 error.`;
+Other options:
+  -h, --help             this text
+  -V, --version          the version
+
+Exit codes: 0 ok; 1 the video was written but failed its checks; 2 usage: a wrong command
+line, an invalid or non-local script, or a file init would overwrite; 3 error while running.`;
 
 function one(args: string[], what: string): string {
   const [file, extra] = args;
-  if (file === undefined || extra !== undefined) throw new UserError(`expected exactly one ${what}`, `Run "${NAME} --help".`);
+  if (file === undefined || extra !== undefined) throw new UsageError(`expected exactly one ${what}`, `Run "${NAME} --help".`);
   return file;
 }
 
@@ -69,8 +74,14 @@ const renderCommand: Command = async (args, values, print) => {
     log.info(`done: ${result.seconds.toFixed(1)} s, checks passed`);
     return EXIT.ok;
   }
-  for (const p of result.problems) log.warn(p);
-  return values['no-check'] === true ? EXIT.ok : EXIT.checkFailed;
+  if (values['no-check'] === true) {
+    for (const p of result.problems) log.warn(p);
+    return EXIT.ok;
+  }
+  for (const p of result.problems) log.error(p);
+  log.error(`the video was written but failed ${String(result.problems.length)} check${result.problems.length === 1 ? '' : 's'}`);
+  log.hint('See the contact sheet; fix the script, or pass --no-check to accept the video.');
+  return EXIT.checkFailed;
 };
 
 const checkCommand: Command = async (args, _values, print) => {
@@ -90,7 +101,7 @@ const initCommand: Command = async (args, values, print) => {
     () => true,
     () => false,
   );
-  if (exists && values.force !== true) throw new UserError(`${file} already exists`, 'Pass --force to overwrite it.');
+  if (exists && values.force !== true) throw new UsageError(`${file} already exists`, 'Pass --force to overwrite it.');
   await writeFile(file, STARTER);
   print(file);
   return EXIT.ok;

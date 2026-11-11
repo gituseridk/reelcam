@@ -202,10 +202,13 @@ reelcam check <script.yml>
 reelcam init [file] | reelcam init --demo [dir]
 reelcam setup [--with-deps]
 reelcam presets
+reelcam --version
 ```
 
-Exit codes: 0 ok, 1 written but failed a check, 2 usage, 3 error. Logs go to stderr and the
-written file paths to stdout.
+Exit codes: 0 ok; 1 the video was written but failed a check (each failure is printed as an
+error); 2 usage: a wrong command line, an invalid script (a non-local URL included) or a file
+`init` would overwrite; 3 an error while running (Chromium, ffmpeg, the page). Logs go to
+stderr, with fixes as `hint:` lines, and the written file paths to stdout.
 
 ## API
 

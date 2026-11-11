@@ -7,7 +7,7 @@ import { loadImage, createCanvas } from '@napi-rs/canvas';
 import { beforeAll, describe, expect, it } from 'vitest';
 import { main } from '../src/cli.js';
 import { render } from '../src/index.js';
-import { setLevel } from '../src/log.js';
+import { setLevel, setSink } from '../src/log.js';
 
 const APP = path.resolve('examples/pebble');
 let dir: string;
@@ -62,8 +62,14 @@ describe('render', () => {
 
   it('fails the check on forbidden text, a flicker shot, and exits 1 from the CLI', async () => {
     const file = await script('noisy', 'forbid: ["flaky"]\nsteps:\n  - focus: "#composer"\n  - wait: 300\n  - wide\n  - wait: 1300\n');
+    const logged: string[] = [];
+    const restore = setSink((line) => logged.push(line));
     const code = await main(['render', file, '-o', path.join(dir, 'noisy.mp4'), '-q'], () => undefined);
+    restore();
     expect(code).toBe(1);
+    expect(logged.join('\n')).toMatch(/^reelcam: error: .*forbidden text/m); // a failure reads as one
+    expect(logged.join('\n')).toMatch(/^reelcam: hint: /m);
+    expect(logged.join('\n')).not.toMatch(/warning:/);
     const result = await render(file, { output: path.join(dir, 'noisy.mp4'), sheet: false });
     const text = result.problems.join('\n');
     expect(text).toMatch(/forbidden text \/flaky\//);

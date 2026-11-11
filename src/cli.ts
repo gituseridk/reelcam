@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /** The command line: render, check, init, setup, presets (usage text in commands.ts). */
 import { parseArgs } from 'node:util';
-import { UserError, describe } from './errors.js';
+import { UsageError, UserError, describe } from './errors.js';
 import { log, setLevel } from './log.js';
 import { realpathSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { commands, EXIT, USAGE } from './commands.js';
+import { packageVersion } from './version.js';
 
 function parse(argv: string[]): ReturnType<typeof parseArgs<{ options: typeof OPTIONS; allowPositionals: true; strict: true }>> {
   return parseArgs({ args: argv, options: OPTIONS, allowPositionals: true, strict: true });
@@ -25,7 +26,7 @@ const OPTIONS = {
   verbose: { type: 'boolean', short: 'v' },
   quiet: { type: 'boolean', short: 'q' },
   help: { type: 'boolean', short: 'h' },
-  version: { type: 'boolean' },
+  version: { type: 'boolean', short: 'V' },
 } as const;
 
 export type Parsed = ReturnType<typeof parse>;
@@ -41,6 +42,10 @@ export async function main(argv: string[], print: (text: string) => void): Promi
   }
   const { values, positionals } = parsed;
   setLevel(values.quiet === true ? 'quiet' : values.verbose === true ? 'debug' : 'info');
+  if (values.version === true) {
+    print(packageVersion());
+    return EXIT.ok;
+  }
   const [name, ...rest] = positionals;
   const command = name === undefined ? undefined : commands[name];
   if (values.help === true || command === undefined) {
@@ -56,8 +61,8 @@ export async function main(argv: string[], print: (text: string) => void): Promi
       return EXIT.error;
     }
     log.error(error.message);
-    if (error.hint !== undefined) log.error(`hint: ${error.hint}`);
-    return EXIT.error;
+    if (error.hint !== undefined) log.hint(error.hint);
+    return error instanceof UsageError ? EXIT.usage : EXIT.error;
   }
 }
 

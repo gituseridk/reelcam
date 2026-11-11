@@ -37,6 +37,10 @@ export const log = {
   warn: (message: string): void => {
     emit('info', `${NAME}: warning:`, message);
   },
+  /** How to fix the error just written; always written. */
+  hint: (message: string): void => {
+    sink(`${NAME}: hint: ${message}`);
+  },
   /** Errors are always written, whatever the level. */
   error: (message: string): void => {
     sink(`${NAME}: error: ${message}`);

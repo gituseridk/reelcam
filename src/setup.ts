@@ -5,7 +5,7 @@ import { access, cp, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { UserError, describe } from './errors.js';
+import { UsageError, UserError, describe } from './errors.js';
 import { NAME } from './brand.js';
 import { log } from './log.js';
 import { FFMPEG_ENV } from './render/encode.js';
@@ -50,7 +50,7 @@ async function exists(file: string): Promise<boolean> {
 /** Copies the demo app into `dir`/app and writes `dir`/demo.yml. Returns the script path. */
 export async function writeDemo(dir: string, force: boolean): Promise<string> {
   const script = path.join(dir, 'demo.yml');
-  if ((await exists(script)) && !force) throw new UserError(`${script} already exists`, 'Pass --force to overwrite it.');
+  if ((await exists(script)) && !force) throw new UsageError(`${script} already exists`, 'Pass --force to overwrite it.');
   await mkdir(dir, { recursive: true });
   await cp(path.join(PACKAGE_ROOT, 'examples', 'orbit'), path.join(dir, 'orbit'), { recursive: true });
   const hero = await readFile(path.join(PACKAGE_ROOT, 'examples', 'hero.yml'), 'utf8');
