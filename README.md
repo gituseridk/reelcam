@@ -38,6 +38,14 @@ The same story as a 9:16 phone video, from [`examples/hero-vertical.yml`](exampl
 
 Every video has a per-moment content audit in [docs/AUDIT.md](docs/AUDIT.md).
 
+### Compared with webreel
+
+Vercel Labs' [webreel](https://github.com/vercel-labs/webreel) also records scripted browser
+videos: JSON steps, an animated cursor, a keystroke overlay, sound effects, a fixed CSS zoom per
+video, and MP4, GIF or WebM output. Reelcam adds a camera that frames a DOM element per shot, a
+self-check that fails a badly framed video, and a local-only default; it has no keystroke
+overlay, sound or WebM.
+
 ## Quickstart
 
 Needs Node.js 22.12+ and ffmpeg.
@@ -52,8 +60,12 @@ reelcam render reelcam-demo/demo.yml
 <!-- quickstart:end -->
 
 That records the bundled demo app and writes `out/demo.mp4` and `out/demo.sheet.png`, a
-contact sheet with four stills per shot. (`--with-deps` also installs Chromium's system
-libraries on Linux and may need `sudo`; on macOS and Windows plain `reelcam setup` is enough.)
+contact sheet with four stills per shot. `setup` downloads only Chromium's headless shell (about
+115 MB; Playwright adds its own 2 MB ffmpeg, which reelcam does not use: videos are encoded with the
+ffmpeg on your PATH). `--with-deps` also installs Chromium's system libraries on Linux and may need
+`sudo`; on macOS and Windows plain `reelcam setup` is enough. On a Linux distribution Playwright
+does not list, it prints `BEWARE: your OS is not officially supported`; reelcam has been run on
+such a system (CachyOS) without trouble.
 
 For your own app: `reelcam init` writes a starter `reelcam.yml`. Point `url` at your app running
 locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
@@ -86,8 +98,9 @@ locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
 | `redact` | `[]` | Selectors to blur in every frame. |
 | `forbid` | `[]` | Regular expressions (case-insensitive) that fail the video if visible. |
 | `allowRemote` | `false` | Allow non-local URLs. |
-| `output` | `out/<name>.mp4` | Where to write the MP4, relative to the script. |
+| `output` | `out/<name>.mp4` | Where to write the MP4. A path given here is relative to the script; the default `out/` is in the directory you run reelcam from (see below). |
 | `gif` | `false` | Also write a GIF. |
+| `checks` | `{ neighbours: true }` | Which optional checks run. `neighbours: false` turns off the neighbour check (camera rule 9); the other checks always run. |
 | `seed` | `1` | Seed for the pointer's human jitter. |
 | `setup` | `[]` | Steps played before filming starts: sign in, dismiss a banner, give a canvas app keyboard focus. No camera steps. |
 | `steps` | | The list below. |
@@ -108,6 +121,18 @@ locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
 | `waitFor` | `waitFor: ".toast"` | Waits until the element is visible (up to 10 s). |
 | `visit` | `visit: /settings` | Opens another page. |
 | `caption` | `caption: "Saved"` or `caption: { text: "Saved", ms: 2500 }` | A caption at the bottom; the camera leaves room for it. |
+
+**Where the video goes.** By default every script writes to `out/<name>.mp4` under the directory
+you run reelcam from, so one `out/` collects all your videos (one line in `.gitignore`, one path
+for a CI artifact) and `-o` works like any CLI path. An `output` key in the script is relative to
+the script instead, so a script that names its own file writes it to the same place wherever it
+is run from, as `serve` does.
+
+**How long a shot shows.** Every camera step (`focus`, `zoom`, `wide`) starts its 0.7 s move
+ahead of time, so the shot before it starts leaving 0.7 s early: a shot holds still on screen for
+the time until the next camera step minus 0.7 s. The check fails a shot whose time until the next
+camera step is under 1.2 s; to show a shot still for 1.2 s, give it 1900 ms (a `wide` with
+`wait: 1500` before a `zoom` holds still for only about 0.8 s). The last shot holds to the end.
 
 Selectors are [Playwright selectors](https://playwright.dev/docs/locators): CSS plus
 `:has-text()`, `>> nth=1` and more. `reelcam check script.yml` validates a script and lists every
@@ -162,6 +187,9 @@ caption style. New presets are welcome.
     script: demos/signup.yml
 ```
 
+`v0` is the moving tag for the 0.x releases; it is created with the first release (see
+[LAUNCH.md](LAUNCH.md)). Until it exists, pin a commit: `gituseridk/reelcam@<commit-sha>`.
+
 It installs Chromium and ffmpeg, renders, fails the job when the video fails its checks, and
 uploads the MP4 and contact sheet as an artifact. Inputs: `script`, `output`, `preset`, `gif`,
 `allow-remote`, `upload`, `artifact-name`, `node-version`. Outputs: `video`, `sheet`, `gif`.
@@ -203,7 +231,7 @@ if (result.problems.length > 0) console.error(result.problems);
 
 ```sh
 npm ci
-npx playwright install chromium
+npx playwright install --only-shell chromium
 npm run check        # eslint (strict, type-checked) + tsc + vitest, including real renders
 ./scripts/hero.sh    # re-render the README videos (16:9 and 9:16)
 ./scripts/gallery.sh # build Excalidraw locally and film the gallery video
