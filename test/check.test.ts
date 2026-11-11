@@ -47,11 +47,4 @@ describe('checkFraming', () => {
     const f = new Framing(take([shot(0, rect(100, 100, 400, 100))]), lay);
     expect(checkFraming(f, lay, settledViews(f, 3), [[2, 1400, 800]], [0, 3]).join('\n')).toMatch(/click happens outside/);
   });
-
-  it('flags a caption that covers the subject', () => {
-    const f = new Framing(take([shot(0, rect(0, 0, 1440, 700))]), lay, []);
-    const covered = new Framing(take([shot(0, rect(0, 0, 1440, 700))]), lay, [{ start: 1, end: 3, height: 400 }]);
-    const views = settledViews(f, 3).map((v) => ({ ...v }));
-    expect(checkFraming(covered, lay, views, [], [0, 3]).join('\n')).toMatch(/caption covers the subject/);
-  });
 });

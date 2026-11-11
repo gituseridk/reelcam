@@ -1,6 +1,6 @@
 /** The automatic framing check. A video FAILS when, after the camera settled on a shot, its subject
  *  is not entirely in frame; when a shot is held too briefly to read; or when a click happens
- *  outside the frame. */
+ *  outside the frame. (Captions over the subject: covered.ts; cut neighbours: neighbours.ts.) */
 import type { Rect } from '../take.js';
 import { lastAtOrBefore, type Framing } from './framing.js';
 import type { Layout, View } from './geometry.js';
@@ -63,22 +63,6 @@ function crops(framing: Framing, lay: Layout, views: readonly ViewAt[], t0: numb
   return [];
 }
 
-/** A settled frame where a text overlay covers part of the shot's subject. */
-function covered(framing: Framing, lay: Layout, views: readonly ViewAt[], t0: number): string[] {
-  const H = lay.preset.height;
-  for (const v of views) {
-    const i = framing.index(v.t);
-    const shot = framing.shots[i];
-    const band = framing.bands.find((b) => v.t >= b.start + 0.3 && v.t <= b.end - 0.4);
-    if (shot === undefined || shot.window || band === undefined || v.t < shot.t + SETTLE || leaving(framing, lay, i, v.t)) continue;
-    const at = subjectAt(framing, i, v.t);
-    if (at === null || v.t < at.changed + GRACE) continue;
-    const bottom = (lay.toCanvas(0, at.rect.y + at.rect.height)[1] - v.y) * (H / v.height);
-    if (bottom > H - band.height + 1) return [`t=${(v.t - t0).toFixed(2)} s, shot "${shot.name}": a caption covers the subject`];
-  }
-  return [];
-}
-
 function clicksOutside(lay: Layout, views: readonly ViewAt[], clicks: readonly [number, number, number][], t0: number): string[] {
   const times = views.map((v) => v.t);
   return clicks.flatMap(([t, x, y]) => {
@@ -90,5 +74,5 @@ function clicksOutside(lay: Layout, views: readonly ViewAt[], clicks: readonly [
 
 /** Every problem found; an empty list means the video passes. */
 export function checkFraming(framing: Framing, lay: Layout, views: readonly ViewAt[], clicks: readonly [number, number, number][], span: [number, number]): string[] {
-  return [...holds(framing, span[1]), ...crops(framing, lay, views, span[0]), ...covered(framing, lay, views, span[0]), ...clicksOutside(lay, views, clicks, span[0])];
+  return [...holds(framing, span[1]), ...crops(framing, lay, views, span[0]), ...clicksOutside(lay, views, clicks, span[0])];
 }

@@ -16,12 +16,18 @@ export function union(a: Rect, b: Rect): Rect {
 
 export { lastAtOrBefore } from './search.js';
 
-/** A text overlay's time span and the canvas height it needs at the bottom of the frame. */
+/** A text overlay's time span and the canvas height it needs at the bottom of the frame (and its
+ *  width, centred; the whole frame width when not given). */
 export interface Band {
   start: number;
   end: number;
   height: number;
+  width?: number;
 }
+
+/** After a caption, a wide shot zooms back in only when this much of the shot is left after the
+ *  move: else that move would be a flicker at the end of the shot (often the end of the video). */
+export const REHOLD = 1.2;
 
 export class Framing {
   readonly shots: Shot[];
@@ -32,15 +38,18 @@ export class Framing {
   private readonly grown: [number, Rect][][];
   private readonly scenery: SceneIndex;
   private readonly memo = new Map<string, Choice>();
+  /** When the take ends (the last shot holds until then). */
+  private readonly end: number;
 
   constructor(
-    readonly take: Pick<Take, 'shots' | 'subjects' | 'scenery'>,
+    readonly take: Pick<Take, 'shots' | 'subjects' | 'scenery' | 'times'>,
     private readonly lay: Layout,
     readonly bands: readonly Band[] = [],
   ) {
     this.shots = take.shots;
     this.scenery = new SceneIndex(take.scenery, lay.preset.lead);
     this.starts = take.shots.map((s) => s.t);
+    this.end = take.times.at(-1) ?? Infinity;
     this.samples = take.shots.map((s): [number, Rect][] => [[s.t, s.rect]]);
     for (const [t, i, r] of take.subjects) this.samples[i]?.push([t, r]);
     this.grown = this.samples.map((list) => {
@@ -85,10 +94,19 @@ export class Framing {
     return 1 + preset.breathe * ease(Math.min(1, Math.max(0, (t - start) / preset.breatheSeconds)));
   }
 
-  /** For wide shots: the band of an overlay shown now (from just before it appears), so a wide shot
-   *  pulls back only while a caption shows. */
-  reserveNow(t: number): number {
-    return Math.max(0, ...this.bands.filter((b) => t >= b.start - 0.4 && t <= b.end).map((b) => b.height));
+  /** When the shot in force at t ends. */
+  shotEnd(t: number): number {
+    return this.starts[this.index(t) + 1] ?? this.end;
+  }
+
+  /** For wide shots: the band of an overlay showing at `now` (the real time, not the camera's
+   *  look-ahead). The pull-back starts a move ahead of the caption and lasts until it has faded
+   *  out, so the camera never zooms back in under it; when too little of the shot is left for a
+   *  move and a held view, it lasts to the end of the shot. */
+  reserveNow(now: number): number {
+    const lead = this.lay.preset.lead;
+    const until = (b: Band): number => (this.shotEnd(b.end) - b.end < lead + REHOLD ? Math.max(b.end, this.shotEnd(b.end)) : b.end);
+    return Math.max(0, ...this.bands.filter((b) => now >= b.start - 0.4 - lead && now <= until(b)).map((b) => b.height));
   }
 
   /** A wide shot: the page fills the frame and breathes; with a caption band it pulls back just
@@ -103,11 +121,12 @@ export class Framing {
     return [preset.width / 2, pcy - (screenY - preset.height / 2) / fits, fits];
   }
 
-  /** The wanted camera (cx, cy, zoom) on the canvas at time t. */
-  target(t: number): [number, number, number] {
+  /** The wanted camera (cx, cy, zoom) on the canvas for the shot at time t, seen at time `now`
+   *  (the camera aims `lead` s ahead, but a caption's band is kept by the real time). */
+  target(t: number, now = t): [number, number, number] {
     const { preset } = this.lay;
     const i = Math.max(0, this.index(t)); // before the first cut, the first shot already holds
-    const rest = this.wide(t, this.reserveNow(t));
+    const rest = this.wide(t, this.reserveNow(now));
     const shot = this.shots[i];
     const r = this.subject(t);
     if (shot === undefined || r === null) return rest;
@@ -162,7 +181,7 @@ export class Framing {
    *  starts `lead` seconds ahead, with the zoom capped so that subject stays whole on the way. */
   aim(t: number, cx: number, cy: number): [number, number, number] {
     const ahead = t + this.lay.preset.lead;
-    const [tx, ty, tz] = this.target(ahead);
+    const [tx, ty, tz] = this.target(ahead, t);
     const r = this.subject(ahead);
     if (r === null) return [tx, ty, tz];
     const { width: w, height: h } = this.lay.preset;

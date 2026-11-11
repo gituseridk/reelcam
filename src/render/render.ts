@@ -8,6 +8,7 @@ import type { Preset } from '../presets/index.js';
 import type { Take } from '../take.js';
 import { checkFraming, type ViewAt } from './check.js';
 import { Compositor } from './compose.js';
+import { covered } from './covered.js';
 import { gifArgs, runFfmpeg, Encoder } from './encode.js';
 import { Framing } from './framing.js';
 import { neighbourCuts } from './neighbours.js';
@@ -73,7 +74,7 @@ export async function renderTake(take: Take, dir: string, preset: Preset, option
   const stills = planStills(take.shots, t0, t1);
   log.info(`rendering ${path.relative(process.cwd(), options.output) || options.output} (${preset.name}, ${String(preset.width)}x${String(preset.height)})`);
   const { views, framing, lay } = await encodeFrames(take, dir, preset, options.output, stills);
-  const problems = checkFraming(framing, lay, views, take.clicks, [t0, t1]);
+  const problems = [...checkFraming(framing, lay, views, take.clicks, [t0, t1]), ...covered(framing, lay, views, t0)];
   if (options.neighbours) problems.push(...neighbourCuts(framing, lay, views, t0));
   for (const h of take.hits) problems.push(`t=${(h.t - t0).toFixed(2)} s: forbidden text /${h.pattern}/ on screen: "${h.text}"`);
   const base = options.output.replace(/\.mp4$/i, '');

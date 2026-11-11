@@ -24,9 +24,11 @@ export function overlayTop(preset: Preset, imageHeight: number): number {
   return preset.height - preset.margin - 56 * unit - imageHeight;
 }
 
-/** The band a camera must keep clear while the overlay shows: from its top, plus a little air, down. */
+/** The band a camera must keep clear while the overlay shows: from its top, plus a little air, down,
+ *  as wide as the pill plus the same air. */
 export function bandOf(preset: Preset, o: Overlay): Band {
-  return { start: o.start, end: o.start + o.seconds, height: preset.height - overlayTop(preset, o.image.height) + 16 * (preset.width / 1920) };
+  const air = 16 * (preset.width / 1920);
+  return { start: o.start, end: o.start + o.seconds, height: preset.height - overlayTop(preset, o.image.height) + air, width: Math.min(preset.width, o.image.width + 2 * air) };
 }
 
 export function drawOverlay(ctx: SKRSContext2D, preset: Preset, o: Overlay, t: number): void {
