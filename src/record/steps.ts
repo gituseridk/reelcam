@@ -25,6 +25,9 @@ export interface Stage {
 
 const VISIBLE = 10_000;
 
+/** Steps that only direct the camera or queue an overlay: nothing happens on the page. */
+const CAMERA_ONLY: ReadonlySet<Step['kind']> = new Set(['focus', 'wide', 'caption']);
+
 async function visible(stage: Stage, selector: string): Promise<ReturnType<Page['locator']>> {
   const target = stage.page.locator(selector).first();
   await target.waitFor({ state: 'visible', timeout: VISIBLE });
@@ -87,6 +90,7 @@ export async function playSteps(stage: Stage, steps: readonly Step[]): Promise<v
     log.debug(`${label} at ${(now() - start).toFixed(2)} s`);
     try {
       await play(stage, step, label);
+      if (!CAMERA_ONLY.has(step.kind)) stage.director.seen();
     } catch (error) {
       if (error instanceof UserError) throw new UserError(`${label}: ${error.message}`, error.hint, { cause: error });
       throw new UserError(`${label} failed: ${describe(error)}`, 'Check the selector in the browser devtools, or add a "waitFor" step before it.', { cause: error });
