@@ -43,6 +43,13 @@ describe('wide shots', () => {
     const pageBottom = (lay.page.y + lay.page.height - view.y) * z;
     expect(pageBottom).toBeLessThanOrEqual(1080 - 200 + 1e-6);
   });
+
+  it('never pull back for a caption that belongs to the next shot', () => {
+    const footer = { kind: 'text' as const, label: 'footer', rect: rect(600, 780, 200, 20) };
+    const shots = [shot(0, rect(0, 0, 1440, 810), { window: true }), shot(4, rect(100, 500, 500, 200))];
+    const f = new Framing(take(shots, { scenery: [[0, [footer]]] }), lay, [{ start: 4, end: 6, height: 200 }]);
+    for (const now of [2.9, 3.1, 3.29]) expect(f.aim(now, 960, 540)[2]).toBeGreaterThan(1);
+  });
 });
 
 describe('moves between shots', () => {

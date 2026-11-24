@@ -102,11 +102,14 @@ export class Framing {
   /** For wide shots: the band of an overlay showing at `now` (the real time, not the camera's
    *  look-ahead). The pull-back starts a move ahead of the caption and lasts until it has faded
    *  out, so the camera never zooms back in under it; when too little of the shot is left for a
-   *  move and a held view, it lasts to the end of the shot. */
-  reserveNow(now: number): number {
+   *  move and a held view, it lasts to the end of the shot. Only overlays that show during shot i
+   *  count: a caption of the next shot never pulls this one back. */
+  reserveNow(now: number, i = this.index(now)): number {
     const lead = this.lay.preset.lead;
+    const [from, to] = [this.starts[i] ?? -Infinity, this.starts[i + 1] ?? Infinity];
     const until = (b: Band): number => (this.shotEnd(b.end) - b.end < lead + REHOLD ? Math.max(b.end, this.shotEnd(b.end)) : b.end);
-    return Math.max(0, ...this.bands.filter((b) => now >= b.start - 0.4 - lead && now <= until(b)).map((b) => b.height));
+    const mine = this.bands.filter((b) => b.start < to && b.end > from);
+    return Math.max(0, ...mine.filter((b) => now >= b.start - 0.4 - lead && now <= until(b)).map((b) => b.height));
   }
 
   /** A wide shot: the page fills the frame and breathes; with a caption band it pulls back just
@@ -126,7 +129,7 @@ export class Framing {
   target(t: number, now = t): [number, number, number] {
     const { preset } = this.lay;
     const i = Math.max(0, this.index(t)); // before the first cut, the first shot already holds
-    const rest = this.wide(t, this.reserveNow(now));
+    const rest = this.wide(t, this.reserveNow(now, i));
     const shot = this.shots[i];
     const r = this.subject(t);
     if (shot === undefined || r === null) return rest;
