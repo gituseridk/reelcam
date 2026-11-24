@@ -1,14 +1,50 @@
 # Reelcam
 
-**Cinematic demo videos of your web app, from a short YAML script.** A camera that frames what
-matters and moves ahead of the action, a pointer that moves like a person, captions that never
-cover the subject, and a check that fails the video when the camera crops it. Runs headless, in
-CI, or by your coding agent.
+**Script your web app's demo video in YAML. Get a cinematic MP4 that checks its own framing.**
 
-[![The hero video, made by Reelcam](docs/hero.png)](docs/hero.mp4)
+[![ci](https://github.com/gituseridk/reelcam/actions/workflows/ci.yml/badge.svg)](https://github.com/gituseridk/reelcam/actions/workflows/ci.yml)
+[![license](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
-<sub>The video above (click for the MP4) was recorded by Reelcam from these 14 lines,
-[`examples/hero.yml`](examples/hero.yml). The demo app, Orbit, is in [`examples/orbit`](examples/orbit).</sub>
+<p align="center">
+  <a href="docs/hero.mp4"><img src="docs/hero.gif" width="960" alt="Reelcam video of a release page: a command palette opens, 'ship 2.0' is typed, the checks tick to 100%, confetti, and the camera pushes in on the new changelog entry"></a>
+</p>
+<p align="center"><sub>Every frame above was filmed by Reelcam from 14 lines of YAML. <a href="docs/hero.mp4">MP4 (1080p)</a> · <a href="docs/hero-vertical.mp4">9:16 version</a></sub></p>
+
+A virtual camera frames the element that matters and moves ahead of the action, the pointer
+moves like a person, captions never cover the subject, and the render **fails when a frame crops
+what it should show**. Runs headless on your machine, in CI as a GitHub Action, or by your coding
+agent as a skill.
+
+## Quick start
+
+Needs Node.js 22.12+ and ffmpeg. Four commands, one video:
+
+<!-- quickstart:start -->
+```sh
+npm install --global reelcam
+reelcam setup --with-deps
+reelcam init --demo reelcam-demo
+reelcam render reelcam-demo/demo.yml
+```
+<!-- quickstart:end -->
+
+You get `out/demo.mp4` and `out/demo.sheet.png` (four stills per shot, to review a take at a
+glance). For your own app: `reelcam init` writes a starter `reelcam.yml`; point `url` at your app
+running locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
+
+<details>
+<summary>Setup details</summary>
+
+`setup` downloads only Chromium's headless shell (about
+115 MB; Playwright adds its own 2 MB ffmpeg, which reelcam does not use: videos are encoded with the
+ffmpeg on your PATH). `--with-deps` also installs Chromium's system libraries on Linux and may need
+`sudo`; on macOS and Windows plain `reelcam setup` is enough. On a Linux distribution Playwright
+does not list, it prints `BEWARE: your OS is not officially supported`; reelcam has been run on
+such a system (CachyOS) without trouble.
+
+</details>
+
+## The script behind the hero
 
 ```yaml
 serve: orbit
@@ -27,48 +63,31 @@ steps:
   - wait: 2300
 ```
 
-The same story as a 9:16 phone video, from [`examples/hero-vertical.yml`](examples/hero-vertical.yml):
-[docs/hero-vertical.mp4](docs/hero-vertical.mp4).
+Selectors are plain CSS (or Playwright selectors). There are no coordinates to maintain and no
+keyframes: the camera reads the element's box from the DOM while it records. The demo app, Orbit,
+is in [`examples/orbit`](examples/orbit).
 
-### Gallery
+## How it compares
+
+| | Reelcam | [webreel](https://github.com/vercel-labs/webreel) | Playwright `recordVideo` | [VHS](https://github.com/charmbracelet/vhs) | Screen recorder apps |
+|---|---|---|---|---|---|
+| Records | web apps | web apps | web apps | terminals | anything on screen |
+| Written as | YAML script | JSON steps | test code | `.tape` script | by hand, each take |
+| Camera | frames a DOM element per shot, springs between shots | fixed zoom per video | none | none | manual or cursor-follow |
+| Fails a bad take | yes: crop, flicker, off-camera click, caption over subject | no | no | no | no |
+| Re-record after a UI change | one command, in CI | one command | one command | one command | record again |
+| Output | MP4 (2x), GIF, contact sheet | MP4, GIF, WebM | WebM | GIF, MP4, WebM | varies |
+
+webreel also has a keystroke overlay and sound effects, which Reelcam does not. Pick VHS for
+terminal demos; pick Reelcam when the demo is a web page and you want it to look edited.
+
+## Gallery
 
 | | |
 |---|---|
 | [![Excalidraw, filmed by Reelcam](docs/gallery/excalidraw.png)](docs/gallery/excalidraw.mp4) | **Excalidraw** (MIT), built and run locally. A three-step flow sketched with the keyboard tools, filmed by [a 28-line script](examples/gallery/excalidraw/excalidraw.yml) with `drag`, a `setup` step and an `area` shot. |
 
 Every video has a per-moment content audit in [docs/AUDIT.md](docs/AUDIT.md).
-
-### Compared with webreel
-
-Vercel Labs' [webreel](https://github.com/vercel-labs/webreel) also records scripted browser
-videos: JSON steps, an animated cursor, a keystroke overlay, sound effects, a fixed CSS zoom per
-video, and MP4, GIF or WebM output. Reelcam adds a camera that frames a DOM element per shot, a
-self-check that fails a badly framed video, and a local-only default; it has no keystroke
-overlay, sound or WebM.
-
-## Quickstart
-
-Needs Node.js 22.12+ and ffmpeg.
-
-<!-- quickstart:start -->
-```sh
-npm install --global reelcam
-reelcam setup --with-deps
-reelcam init --demo reelcam-demo
-reelcam render reelcam-demo/demo.yml
-```
-<!-- quickstart:end -->
-
-That records the bundled demo app and writes `out/demo.mp4` and `out/demo.sheet.png`, a
-contact sheet with four stills per shot. `setup` downloads only Chromium's headless shell (about
-115 MB; Playwright adds its own 2 MB ffmpeg, which reelcam does not use: videos are encoded with the
-ffmpeg on your PATH). `--with-deps` also installs Chromium's system libraries on Linux and may need
-`sudo`; on macOS and Windows plain `reelcam setup` is enough. On a Linux distribution Playwright
-does not list, it prints `BEWARE: your OS is not officially supported`; reelcam has been run on
-such a system (CachyOS) without trouble.
-
-For your own app: `reelcam init` writes a starter `reelcam.yml`. Point `url` at your app running
-locally, or `serve` at a built folder, then `reelcam render reelcam.yml`.
 
 ## Why
 

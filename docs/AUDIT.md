@@ -7,6 +7,9 @@ reason. One idea per video. The contact sheets (`out/*.sheet.png`, made by `scri
 ## Hero (16:9), `examples/hero.yml`, 10.1 s. Idea: "ship a release from the command bar"
 
 Cuts are fixed 0.7 s moves that land exactly on the next shot; no shot shows a partly visible neighbour.
+Re-rendered 2026-11-24: the wide payoff no longer pulls back onto the stage before the changelog
+shot (it reserved room for the next shot's caption); the move is now one push-in. The README
+plays `docs/hero.gif`, a 960 px, 20 fps encode of this take.
 
 | t (s) | Shot | On screen | Verdict |
 |---|---|---|---|

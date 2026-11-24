@@ -1,8 +1,9 @@
 # Launch checklist: reelcam
 
-Run from the repository root, in this order. State on 2026-11-11: the repository exists and is
-**private** (gituseridk/reelcam, `origin`, description set); no topics, no homepage, no tags, no
-release, nothing on npm. Steps 1 (make public) to 4 have not been run.
+Run from the repository root, in this order. State on 2026-11-24: the repository is **public**
+(gituseridk/reelcam), v0.1.0 is tagged and released on GitHub, CI on main is green, the README
+hero plays inline (`docs/hero.gif`); nothing is on npm yet and nothing has been announced.
+Steps 1 to 3 are done; step 4 (npm) and the launch posts wait on the owner.
 
 ## 0. Before
 
@@ -28,15 +29,9 @@ Then check that the latest `ci` run (check, action, fresh-install) on main passe
 
 ## 2. Hero video in the README
 
-GitHub plays inline only videos uploaded as user attachments; a repository MP4 is only a link.
-
-1. On github.com, open any issue or comment box in gituseridk/reelcam, drag in `docs/hero.mp4`
-   and copy the `https://github.com/user-attachments/assets/<id>` URL it gives (do not submit
-   the comment).
-2. In README.md, replace the hero line
-   `[![The hero video, made by Reelcam](docs/hero.png)](docs/hero.mp4)`
-   with that URL on its own line. Keep `docs/hero.png` as the npm page poster if wanted.
-3. Commit and push.
+Done in the repository: `scripts/hero.sh` renders `docs/hero.mp4` and the inline
+`docs/hero.gif` (960 px, 20 fps), and the README shows the GIF linked to the MP4. No manual
+upload is needed.
 
 ## 3. First release
 
